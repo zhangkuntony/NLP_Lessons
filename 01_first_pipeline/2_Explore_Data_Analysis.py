@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import Counter
 import matplotlib
+import matplotlib.font_manager as fm
 import subprocess
 import sys
 import os
@@ -76,12 +77,12 @@ def setup_chinese_font():
         plt.rcParams['axes.unicode_minus'] = False
 
         # 测试中文显示
-        fig, ax = plt.subplots(figsize=(2, 2))
-        ax.text(0.5, 0.5, '测试中文', ha='center', va='center', fontsize=12)
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.axis('off')
-        plt.close(fig)
+        fig_for_test, ax_for_test = plt.subplots(figsize=(2, 2))
+        ax_for_test.text(0.5, 0.5, '测试中文', ha='center', va='center', fontsize=12)
+        ax_for_test.set_xlim(0, 1)
+        ax_for_test.set_ylim(0, 1)
+        ax_for_test.axis('off')
+        plt.close(fig_for_test)
 
         return True
     except Exception as e:
@@ -220,3 +221,43 @@ print("✅ 推荐模型: 短文本分类模型(如BERT、TextCNN)")
 print("✅ 数据处理: 需要数据增强平衡各类别")
 print("✅ 特征工程: 可以提取关键词、n-gram特征")
 print("✅ 评估指标: 准确率、F1-score、混淆矩阵")
+
+# 中文字体测试
+# 创建一个简单的测试图来验证中文显示是否正常
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+# 测试不同字体大小的中文显示
+test_texts = [
+    "📊 数据探索 - Data Exploration",
+    "🎯 意图分类 - Intent Classification",
+    "📝 文本处理 - Text Processing",
+    "🔍 特征提取 - Feature Extraction",
+    "🤖 模型训练 - Model Training"
+]
+
+y_positions = [0.8, 0.6, 0.4, 0.2, 0.0]
+font_sizes = [16, 14, 12, 10, 8]
+
+for i, (text, y_pos, font_size) in enumerate(zip(test_texts, y_positions, font_sizes)):
+    ax.text(0.1, y_pos, text, fontsize=font_size, weight='bold',
+            transform=ax.transAxes, va='center')
+
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
+ax.set_title('中文字体显示测试 - Chinese Font Display Test', fontsize=18, weight='bold')
+ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+
+# 显示字体配置信息
+print("🔧 === 字体配置信息 ===")
+print(f"当前字体设置: {plt.rcParams['font.sans-serif']}")
+print(f"中文字体状态: {'✅ 可用' if chinese_font_available else '❌ 不可用'}")
+
+# 显示系统可用字体
+print("\n📋 === 系统可用字体 ===")
+available_fonts = [f.name for f in fm.fontManager.ttflist]
+chinese_fonts = [f for f in available_fonts if any(keyword in f for keyword in ['Chinese', 'Hei', 'Song', 'Kai', 'Noto', 'WenQuanYi'])]
+print(f"检测到的中文相关字体：{chinese_fonts[:]}...")
