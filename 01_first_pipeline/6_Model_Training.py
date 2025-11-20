@@ -5,7 +5,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import cross_val_score, GridSearchCV, train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import confusion_matrix
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +13,10 @@ import seaborn as sns
 from sklearn.feature_extraction.text import TfidfVectorizer
 import jieba
 import time
+
+# 设置字体（使用英文避免中文显示问题）
+plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'SimSun']
+plt.rcParams['axes.unicode_minus'] = False
 
 # 准备更大的模拟数据集用于建模
 np.random.seed(42)
@@ -96,7 +100,7 @@ models = {
 
 # 存储结果
 results = {}
-traning_times = {}
+training_times = {}
 
 print("开始训练各种模型...")
 for name, model in models.items():
@@ -115,19 +119,151 @@ for name, model in models.items():
 
     # 预测
     y_pred = model.predict(x_test)
-    test_accuracy = (y_pred == y_test).mean()
+    test_accuracy = np.mean(y_pred == y_test)
 
     # 存储结果
     results[name] = {
-        'cv_neam': cv_scores.mean(),
+        'cv_mean': cv_scores.mean(),
         'cv_std': cv_scores.std(),
         'test_accuracy': test_accuracy,
         'model': model
     }
-    traning_times[name] = training_time
+    training_times[name] = training_time
 
     print(f"  交叉验证准确率: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
     print(f"  测试集准确率: {test_accuracy:.4f}")
     print(f"  训练时间: {training_time:.2f}秒")
 
 print("\n📊 === 模型性能对比 ===")
+
+# 创建结果DataFrame
+results_df = pd.DataFrame({
+    name: {
+        '交叉验证准确率': data['cv_mean'],
+        '测试集准确率': data['test_accuracy'],
+        '训练时间（秒）': training_times[name]
+    }
+    for name, data in results.items()
+}).T
+
+print("各模型性能汇总:")
+print(results_df.round(4))
+
+# 找出最佳模型
+best_model_name = max(results.keys(), key=lambda key: results[key]['test_accuracy'])
+best_model = results[best_model_name]['model']
+
+print(f"\n🏆 最佳模型: {best_model_name}")
+print(f"测试集准确率: {results[best_model_name]['test_accuracy']:.4f}")
+
+print("\n📈 === 性能可视化 ===")
+
+# 可视化模型性能对比
+fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+
+# 1. 准确率对比
+model_names = list(results.keys())
+test_accs = [results[name]['test_accuracy'] for name in model_names]
+cv_accs = [results[name]['cv_mean'] for name in model_names]
+
+x = np.arange(len(model_names))
+width = 0.35
+
+axes[0, 0].bar(x - width / 2, cv_accs, width, label='交叉验证', alpha=0.8, color='skyblue')
+axes[0, 0].bar(x + width / 2, test_accs, width, label='测试集', alpha=0.8, color='lightcoral')
+axes[0, 0].set_xlabel('模型')
+axes[0, 0].set_ylabel('准确率')
+axes[0, 0].set_title('模型准确率对比')
+axes[0, 0].set_xticks(x)
+axes[0, 0].set_xticklabels(model_names, rotation=45)
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# 2. 训练时间对比
+train_times = [training_times[name] for name in model_names]
+axes[0, 1].bar(model_names, train_times, color='lightgreen', alpha=0.8)
+axes[0, 1].set_xlabel('模型')
+axes[0, 1].set_ylabel('训练时间（秒）')
+axes[0, 1].set_title('训练时间对比')
+axes[0, 1].tick_params(axis='x', rotation=45)
+axes[0, 1].grid(True, alpha=0.3)
+
+# 3. 最佳模型的混淆矩阵
+y_pred_best = best_model.predict(x_test)
+cm = confusion_matrix(y_test, y_pred_best)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=best_model.classes_,
+            yticklabels=best_model.classes_,
+            ax=axes[1, 0])
+axes[1, 0].set_title(f'{best_model_name} 混淆矩阵')
+axes[1, 0].set_xlabel('预测标签')
+axes[1, 0].set_ylabel('真实标签')
+
+# 4. 准确率 vs 速度 散点图
+axes[1, 1].scatter(train_times, test_accs, s=100, alpha=0.7, c='purple')
+for i, name in enumerate(model_names):
+    axes[1, 1].annotate(name, (train_times[i], test_accs[i]),
+                        xytext=(5, 5), textcoords='offset points',)
+axes[1, 1].set_xlabel('训练时间（秒）')
+axes[1, 1].set_ylabel('测试准确率')
+axes[1, 1].set_title('准确率 vs 训练时间')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+print("\n🔧 === 超参数调优示例 ===")
+
+# 对最佳模型进行超参数调优
+if best_model_name == '随机森林':
+    param_grid = {
+        'n_estimators': [50, 100, 200],
+        'max_depth': [5, 10, None],
+        'min_samples_split': [2, 5, 10],
+    }
+elif best_model_name == '逻辑回归':
+    param_grid = {
+        'C': [0.1, 1, 10, 100],
+        'penalty': ['l1', 'l2'],
+        'solver': ['liblinear']
+    }
+else:
+    param_grid = {}
+
+if param_grid:
+    print(f"对 {best_model_name} 进行超参数调优...")
+
+    grid_search = GridSearchCV(
+        models[best_model_name],
+        param_grid,
+        cv=3,
+        scoring='accuracy',
+        n_jobs=1
+    )
+
+    grid_search.fit(x_train, y_train)
+
+    print(f"最佳参数: {grid_search.best_params_}")
+    print(f"最佳交叉验证分数: {grid_search.best_score_:.4f}")
+
+    # 在测试集上评估调优后的模型
+    optimized_score = grid_search.score(x_test, y_test)
+    print(f"调优后测试准确率: {optimized_score:.4f}")
+
+    # 性能提升
+    improvement = optimized_score - results[best_model_name]['test_accuracy']
+    print(f"性能提升: {improvement:.4f}")
+
+print("\n✅ === 建模总结 ===")
+print("🎯 模型训练完成情况:")
+print(f"  ✅ 测试了 {len(models)} 种不同模型")
+print(f"  ✅ 最佳模型: {best_model_name}")
+print(f"  ✅ 最高准确率: {max(test_accs):.4f}")
+print(f"  ✅ 平均训练时间: {np.mean(train_times):.2f}秒")
+
+print("\n💡 建模建议:")
+print("✅ 简单模型(朴素贝叶斯)训练快速，适合快速原型")
+print("✅ 复杂模型(随机森林)效果更好，但需要更多计算资源")
+print("✅ 线性模型(逻辑回归)平衡了效果和速度")
+print("✅ 可以根据业务需求选择合适的模型")
+print("✅ 模型已准备好进入评估阶段！")
