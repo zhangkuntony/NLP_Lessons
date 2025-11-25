@@ -16,7 +16,7 @@ pd.set_option('display.width', None)
 print("✅ 环境配置完成！")
 
 # 定义只能读取函数
-def smart_read_csv(file_path, sample_size=1000):
+def smart_read_csv(file_path, data_size=1000):
     """
     智能读取CSV文件，自动尝试不同编码
 
@@ -36,7 +36,7 @@ def smart_read_csv(file_path, sample_size=1000):
             print(f"🔍 尝试使用 {encoding} 编码读取文件...")
 
             # 先读取样本测试编码是否正确
-            pd.read_csv(file_path, encoding=encoding, nrows=sample_size)
+            pd.read_csv(file_path, encoding=encoding, nrows=data_size)
             print(f"✅ 成功！使用 {encoding} 编码读取文件")
 
             # 测试成功后读取完整文件
@@ -73,7 +73,7 @@ print("⚠️  由于评论文件较大(68MB)，我们先读取前10000条进行
 # 使用只能读取函数处理评论数据
 try:
     # 方法1：使用只能读取函数（推荐）
-    comments_df, comment_encoding = smart_read_csv('douban-dataset/comments.csv', sample_size=1000)
+    comments_df, comment_encoding = smart_read_csv('douban-dataset/comments.csv', data_size=1000)
 
     # 如果文件太大，只取前10000条
     if comments_df is not None and len(comments_df) > 10000:

@@ -1,0 +1,9 @@
+matplotlib
+pandas
+seaborn
+numpy
+jieba
+nltk
+network
+pyvis
+wordcloud
