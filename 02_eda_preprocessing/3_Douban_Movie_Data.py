@@ -15,138 +15,138 @@ plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 
 print("🎉 工具箱准备完毕！让我们开始探索数据吧！")
-#
-# # 🎨 示例1：创建一些模拟数据来演示seaborn
-# print("🎬 创建一些模拟的电影评分数据来演示...")
-#
-# # 创建模拟数据：不同类型电影的评分
-# np.random.seed(42)  # 保证结果可重复
-# movie_data = {
-#     '电影类型': ['动作'] * 100 + ['喜剧'] * 100 + ['爱情'] * 100 + ['科幻'] * 100,
-#     '评分': (
-#         np.random.normal(7.5, 1.2, 100).tolist() +  # 动作片评分
-#         np.random.normal(8.0, 1.0, 100).tolist() +  # 喜剧片评分
-#         np.random.normal(7.8, 1.1, 100).tolist() +  # 爱情片评分
-#         np.random.normal(7.2, 1.3, 100).tolist()    # 科幻片评分
-#     ),
-#     '票房': np.random.lognormal(2, 1, 400),  # 票房数据（对数正态分布）
-# }
-#
-# demo_df = pd.DataFrame(movie_data)
-# print(f"✅ 创建了 {len(demo_df)} 条模拟电影数据")
-# print("前5行数据预览：")
-# print(demo_df.head())
-#
-# # 🆚 示例2：对比matplotlib vs seaborn
-# print("🆚 对比 matplotlib 和 seaborn 的区别")
-#
-# # 创建对比图
-# fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-# fig.suptitle('📊 Matplotlib vs Seaborn 对比展示', fontsize=16, fontweight='bold')
-#
-# # matplotlib版本 - 直方图
-# axes[0,0].hist(demo_df['评分'], bins=20, alpha=0.7, color='blue')
-# axes[0,0].set_title('Matplotlib 直方图')
-# axes[0,0].set_xlabel('评分')
-# axes[0,0].set_ylabel('频次')
-#
-# # seaborn版本 - 直方图
-# sns.histplot(data=demo_df, x='评分', bins=20, ax=axes[0,1])
-# axes[0,1].set_title('Seaborn 直方图（更美观）')
-#
-# # matplotlib版本 - 箱线图
-# box_data = [demo_df[demo_df['电影类型']==genre]['评分'].values
-#            for genre in demo_df['电影类型'].unique()]
-# axes[1,0].boxplot(box_data, labels=demo_df['电影类型'].unique())
-# axes[1,0].set_title('Matplotlib 箱线图')
-# axes[1,0].set_ylabel('评分')
-#
-# # seaborn版本 - 箱线图
-# sns.boxplot(data=demo_df, x='电影类型', y='评分', ax=axes[1,1])
-# axes[1,1].set_title('Seaborn 箱线图（一行代码！）')
-#
-# plt.tight_layout()
-# plt.show()
-#
-# print("🎯 对比总结：")
-# print("• Matplotlib：功能强大但需要更多代码")
-# print("• Seaborn：简洁美观，自动处理分类数据")
-#
-#
-# # ✨ 示例3：Seaborn的"超能力"展示
-# print("✨ Seaborn的特色功能展示")
-#
-# # 创建展示图
-# fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-# fig.suptitle('🌟 Seaborn 特色功能展示', fontsize=16, fontweight='bold')
-#
-# # 1. 散点图 + 回归线（一行代码完成）
-# sns.scatterplot(data=demo_df, x='票房', y='评分', hue='电影类型', ax=axes[0,0])
-# axes[0,0].set_title('🎯 散点图：票房 vs 评分')
-# axes[0,0].set_xlabel('票房（万元）')
-#
-# # 2. 小提琴图（显示分布形状）
-# sns.violinplot(data=demo_df, x='电影类型', y='评分', ax=axes[0,1])
-# axes[0,1].set_title('🎻 小提琴图：评分分布')
-# axes[0,1].tick_params(axis='x', rotation=45)
-#
-# # 3. 计数图（柱状图的升级版）
-# sns.countplot(data=demo_df, x='电影类型', ax=axes[1,0])
-# axes[1,0].set_title('📊 计数图：各类型电影数量')
-#
-# # 4. 热力图（显示相关性）
-# # 创建相关性矩阵
-# corr_data = demo_df[['评分', '票房']].corr()
-# sns.heatmap(corr_data, annot=True, cmap='coolwarm', center=0,
-#             square=True, ax=axes[1,1])
-# axes[1,1].set_title('🔥 热力图：相关性分析')
-#
-# plt.tight_layout()
-# plt.show()
-#
-# print("\n🎓 每种图表的作用：")
-# print("• 📈 散点图：发现两个变量之间的关系")
-# print("• 🎻 小提琴图：比箱线图更详细地显示数据分布")
-# print("• 📊 计数图：统计各类别的数量，比普通柱状图更智能")
-# print("• 🔥 热力图：可视化数字之间的相关性，颜色越深关系越强")
-# print("箱线图作用")
-#
-# # 使用seaborn的regplot或lmplot
-# sns.regplot(data=demo_df, x='评分', y='票房', scatter_kws={'alpha':0.6})
-# plt.title('电影评分与票房关系')
-# plt.xlabel('评分')
-# plt.ylabel('票房')
-# plt.show()
-#
-#
-# import networkx as nx
-# import matplotlib.pyplot as plt
-#
-# # 创建图
-# G = nx.Graph()
-# G.add_edge('电影A', '演员1')
-# G.add_edge('电影A', '导演1')
-# G.add_edge('电影B', '演员1')
-#
-# # 绘制
-# nx.draw(G, with_labels=True)
-# plt.show()
-#
-#
-# from pyvis.network import Network
-#
-# # 创建网络图，设置参数以解决模板问题
-# net = Network(height='600px', width='100%', notebook=True, cdn_resources='remote')
-#
-# # 添加节点
-# net.add_node('电影A', label='电影A', color='#FF6B6B')
-# net.add_node('演员1', label='演员1', color='#4ECDC4')
-#
-# # 添加边
-# net.add_edge('电影A', '演员1')
-#
-# # 在 Jupyter Notebook 中显示
-# net.show('graph.html')
+
+# 🎨 示例1：创建一些模拟数据来演示seaborn
+print("🎬 创建一些模拟的电影评分数据来演示...")
+
+# 创建模拟数据：不同类型电影的评分
+np.random.seed(42)  # 保证结果可重复
+movie_data = {
+    '电影类型': ['动作'] * 100 + ['喜剧'] * 100 + ['爱情'] * 100 + ['科幻'] * 100,
+    '评分': (
+        np.random.normal(7.5, 1.2, 100).tolist() +  # 动作片评分
+        np.random.normal(8.0, 1.0, 100).tolist() +  # 喜剧片评分
+        np.random.normal(7.8, 1.1, 100).tolist() +  # 爱情片评分
+        np.random.normal(7.2, 1.3, 100).tolist()    # 科幻片评分
+    ),
+    '票房': np.random.lognormal(2, 1, 400),  # 票房数据（对数正态分布）
+}
+
+demo_df = pd.DataFrame(movie_data)
+print(f"✅ 创建了 {len(demo_df)} 条模拟电影数据")
+print("前5行数据预览：")
+print(demo_df.head())
+
+# 🆚 示例2：对比matplotlib vs seaborn
+print("🆚 对比 matplotlib 和 seaborn 的区别")
+
+# 创建对比图
+fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+fig.suptitle('📊 Matplotlib vs Seaborn 对比展示', fontsize=16, fontweight='bold')
+
+# matplotlib版本 - 直方图
+axes[0,0].hist(demo_df['评分'], bins=20, alpha=0.7, color='blue')
+axes[0,0].set_title('Matplotlib 直方图')
+axes[0,0].set_xlabel('评分')
+axes[0,0].set_ylabel('频次')
+
+# seaborn版本 - 直方图
+sns.histplot(data=demo_df, x='评分', bins=20, ax=axes[0,1])
+axes[0,1].set_title('Seaborn 直方图（更美观）')
+
+# matplotlib版本 - 箱线图
+box_data = [demo_df[demo_df['电影类型']==genre]['评分'].values
+           for genre in demo_df['电影类型'].unique()]
+axes[1,0].boxplot(box_data, labels=demo_df['电影类型'].unique())
+axes[1,0].set_title('Matplotlib 箱线图')
+axes[1,0].set_ylabel('评分')
+
+# seaborn版本 - 箱线图
+sns.boxplot(data=demo_df, x='电影类型', y='评分', ax=axes[1,1])
+axes[1,1].set_title('Seaborn 箱线图（一行代码！）')
+
+plt.tight_layout()
+plt.show()
+
+print("🎯 对比总结：")
+print("• Matplotlib：功能强大但需要更多代码")
+print("• Seaborn：简洁美观，自动处理分类数据")
+
+
+# ✨ 示例3：Seaborn的"超能力"展示
+print("✨ Seaborn的特色功能展示")
+
+# 创建展示图
+fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+fig.suptitle('🌟 Seaborn 特色功能展示', fontsize=16, fontweight='bold')
+
+# 1. 散点图 + 回归线（一行代码完成）
+sns.scatterplot(data=demo_df, x='票房', y='评分', hue='电影类型', ax=axes[0,0])
+axes[0,0].set_title('🎯 散点图：票房 vs 评分')
+axes[0,0].set_xlabel('票房（万元）')
+
+# 2. 小提琴图（显示分布形状）
+sns.violinplot(data=demo_df, x='电影类型', y='评分', ax=axes[0,1])
+axes[0,1].set_title('🎻 小提琴图：评分分布')
+axes[0,1].tick_params(axis='x', rotation=45)
+
+# 3. 计数图（柱状图的升级版）
+sns.countplot(data=demo_df, x='电影类型', ax=axes[1,0])
+axes[1,0].set_title('📊 计数图：各类型电影数量')
+
+# 4. 热力图（显示相关性）
+# 创建相关性矩阵
+corr_data = demo_df[['评分', '票房']].corr()
+sns.heatmap(corr_data, annot=True, cmap='coolwarm', center=0,
+            square=True, ax=axes[1,1])
+axes[1,1].set_title('🔥 热力图：相关性分析')
+
+plt.tight_layout()
+plt.show()
+
+print("\n🎓 每种图表的作用：")
+print("• 📈 散点图：发现两个变量之间的关系")
+print("• 🎻 小提琴图：比箱线图更详细地显示数据分布")
+print("• 📊 计数图：统计各类别的数量，比普通柱状图更智能")
+print("• 🔥 热力图：可视化数字之间的相关性，颜色越深关系越强")
+print("箱线图作用")
+
+# 使用seaborn的regplot或lmplot
+sns.regplot(data=demo_df, x='评分', y='票房', scatter_kws={'alpha':0.6})
+plt.title('电影评分与票房关系')
+plt.xlabel('评分')
+plt.ylabel('票房')
+plt.show()
+
+
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# 创建图
+G = nx.Graph()
+G.add_edge('电影A', '演员1')
+G.add_edge('电影A', '导演1')
+G.add_edge('电影B', '演员1')
+
+# 绘制
+nx.draw(G, with_labels=True)
+plt.show()
+
+
+from pyvis.network import Network
+
+# 创建网络图，设置参数以解决模板问题
+net = Network(height='600px', width='100%', notebook=True, cdn_resources='remote')
+
+# 添加节点
+net.add_node('电影A', label='电影A', color='#FF6B6B')
+net.add_node('演员1', label='演员1', color='#4ECDC4')
+
+# 添加边
+net.add_edge('电影A', '演员1')
+
+# 在 Jupyter Notebook 中显示
+net.show('graph.html')
 
 
 # 📚 定义智能读取函数
@@ -224,355 +224,355 @@ try:
 except Exception as e:
     print(f"💔 评论数据读取失败: {e}")
     comments_sample = None
-#
-# # 电影数据概览
-# if movies_df is not None:
-#     print("🎬 电影数据的基本信息：")
-#     print("前5行数据预览：")
-#     print(movies_df.head())
-#
-#     print(f"\n数据形状: {movies_df.shape}")
-#     print(f"行数（电影数量）: {movies_df.shape[0]}")
-#     print(f"列数（特征数量）: {movies_df.shape[1]}")
-#
-#     print("\n列名信息：")
-#     for i, col in enumerate(movies_df.columns):
-#         print(f"第{i + 1}列: {col}")
-#
-#     print("\n数据类型：")
-#     print(movies_df.dtypes)
-# else:
-#     print("无法显示电影数据概览")
-#
-#
-# # 评论数据概览
-# if comments_sample is not None:
-#     print("\n💬 评论数据的基本信息：")
-#     print("前5行数据预览：")
-#     print(comments_sample.head())
-#
-#     print(f"\n数据形状: {comments_sample.shape}")
-#     print(f"行数（评论数量）: {comments_sample.shape[0]}")
-#     print(f"列数（特征数量）: {comments_sample.shape[1]}")
-#
-#     print("\n列名信息：")
-#     for i, col in enumerate(comments_sample.columns):
-#         print(f"第{i + 1}列: {col}")
-#
-#     print("\n数据类型：")
-#     print(comments_sample.dtypes)
-#
-#     print("\n缺失值检查：")
-#     missing_data = comments_sample.isnull().sum()
-#     print(missing_data)
-# else:
-#     print("无法显示评论数据概览")
-#
-#
-# # 📊 文本长度分析
-# if comments_sample is not None:
-#     print("📝 评论文本长度分析")
-#     print("=" * 40)
-#
-#     # 假设评论在某一列，我们先检查列名
-#     print("可用列名：", list(comments_sample.columns))
-#
-#     # 尝试找到评论文本列（通常可能叫comment、content、text等）
-#     text_columns = []
-#     for col in comments_sample.columns:
-#         if any(keyword in col.lower() for keyword in ['comment', 'content', 'text', 'review']):
-#             text_columns.append(col)
-#
-#     if text_columns:
-#         comment_col = text_columns[0]
-#         print(f"找到评论列：{comment_col}")
-#
-#         # 计算文本长度
-#         comments_sample['text_length'] = comments_sample[comment_col].astype(str).str.len()
-#
-#         print("\n📏 评论长度统计：")
-#         length_stats = comments_sample['text_length'].describe()
-#         print(length_stats)
-#
-#         print(f"\n🎯 关键指标解读：")
-#         print(f"• 平均评论长度: {length_stats['mean']:.1f} 个字符")
-#         print(f"• 最短评论: {length_stats['min']:.0f} 个字符")
-#         print(f"• 最长评论: {length_stats['max']:.0f} 个字符")
-#         print(f"• 中位数长度: {length_stats['50%']:.1f} 个字符")
-#
-#     else:
-#         print("未找到明确的评论文本列，显示所有列的基本统计：")
-#
-#
-# # 📊 可视化1：评论长度分布直方图
-# if comments_sample is not None and 'text_length' in comments_sample.columns:
-#
-#     # 创建图表
-#     plt.figure(figsize=(12, 6))
-#
-#     # 左图：直方图
-#     plt.subplot(1, 2, 1)
-#     plt.hist(comments_sample['text_length'], bins=30, alpha=0.7, color='skyblue', edgecolor='black')
-#     plt.title('评论长度分布直方图')
-#     plt.xlabel('评论长度（字符数）')
-#     plt.ylabel('评论数量')
-#     plt.grid(True, alpha=0.3)
-#
-#     # 添加统计信息
-#     mean_length = comments_sample['text_length'].mean()
-#     plt.axvline(mean_length, color='red', linestyle='--', label=f'平均值: {mean_length:.1f}')
-#     plt.legend()
-#
-#     # 右图：箱线图
-#     plt.subplot(1, 2, 2)
-#     plt.boxplot(comments_sample['text_length'], labels=['评论长度'])
-#     plt.title('评论长度箱线图')
-#     plt.ylabel('评论长度（字符数）')
-#     plt.grid(True, alpha=0.3)
-#
-#     plt.tight_layout()
-#     plt.show()
-#
-#     # 数据解读
-#     print("🔍 图表解读：")
-#     print("• 直方图显示了评论长度的分布模式")
-#     print("• 箱线图帮助我们发现异常值（超长或超短的评论）")
-#
-#     # 找出异常值
-#     Q1 = comments_sample['text_length'].quantile(0.25)
-#     Q3 = comments_sample['text_length'].quantile(0.75)
-#     IQR = Q3 - Q1
-#     outliers = comments_sample[
-#         (comments_sample['text_length'] < Q1 - 1.5 * IQR) |
-#         (comments_sample['text_length'] > Q3 + 1.5 * IQR)
-#     ]
-#
-#     print(f"• 发现 {len(outliers)} 个异常值（特别长或特别短的评论）")
-#     if len(outliers) > 0:
-#         print(f"• 最长评论有 {outliers['text_length'].max()} 个字符")
-#         print(f"• 最短评论有 {outliers['text_length'].min()} 个字符")
-#
-#
-# # 🔥 热门电影分析
-# if comments_sample is not None:
-#     print("🔥 热门电影分析")
-#     print("=" * 40)
-#
-#     # 检查是否有电影ID或相关列
-#     movie_columns = []
-#     for col in comments_sample.columns:
-#         if any(keyword in col.lower() for keyword in ['movie', 'film', 'id']):
-#             movie_columns.append(col)
-#
-#     if movie_columns:
-#         movie_col = movie_columns[0]
-#         print(f"使用电影标识列: {movie_col}")
-#
-#         # 统计每部电影的评论数量
-#         movie_comment_counts = comments_sample[movie_col].value_counts()
-#
-#         print(f"\n📊 评论数统计:")
-#         print(f"• 总共有 {len(movie_comment_counts)} 部不同的电影")
-#         print(f"• 平均每部电影有 {movie_comment_counts.mean():.1f} 条评论")
-#         print(f"• 评论最多的电影有 {movie_comment_counts.max()} 条评论")
-#         print(f"• 评论最少的电影有 {movie_comment_counts.min()} 条评论")
-#
-#         # 显示TOP 10热门电影
-#         print(f"\n🏆 TOP 10 热门电影（按评论数量）:")
-#         top_movies = movie_comment_counts.head(10)
-#         for i, (movie_id, count) in enumerate(top_movies.items(), 1):
-#             print(f"{i:2d}. 电影ID {movie_id}: {count} 条评论")
-#
-#         # 可视化热门电影
-#         plt.figure(figsize=(12, 6))
-#
-#         # 左图：TOP 10电影评论数
-#         plt.subplot(1, 2, 1)
-#         top_movies.plot(kind='bar', color='lightcoral')
-#         plt.title('🏆 TOP 10 热门电影')
-#         plt.xlabel('电影ID')
-#         plt.ylabel('评论数量')
-#         plt.xticks(rotation=45)
-#         plt.grid(True, alpha=0.3)
-#
-#         # 右图：评论数分布
-#         plt.subplot(1, 2, 2)
-#         plt.hist(movie_comment_counts.values, bins=20, alpha=0.7, color='lightcoral', edgecolor='black')
-#         plt.title('📊 电影评论数分布')
-#         plt.xlabel('评论数量')
-#         plt.ylabel('电影数量')
-#         plt.grid(True, alpha=0.3)
-#
-#         plt.tight_layout()
-#         plt.show()
-#
-#     else:
-#         print("未找到电影相关列，显示数据集的整体统计")
-#
-#
-# # 🎭 电影类型分析 - 第1步：数据准备
-# print("🎭 电影类型偏好分析 - 数据准备阶段")
-# print("=" * 50)
-#
-# if movies_df is not None:
-#     # 1️⃣ 检查现有数据结构
-#     print("📋 电影数据列名:")
-#     for i, col in enumerate(movies_df.columns):
-#         print(f"  {i + 1}. {col}")
-#
-#     # 2️⃣ 创建模拟类型数据（实际项目中替换为真实数据）
-#     print("\n🎨 创建模拟电影类型数据来演示分析方法...")
-#
-#     # 设置随机种子确保结果可重复
-#     np.random.seed(42)
-#
-#     # 定义电影类型和权重分布（模拟真实市场分布）
-#     movie_genres = ['动作', '喜剧', '爱情', '科幻', '悬疑', '动画', '剧情', '恐怖']
-#     genre_weights = [0.15, 0.18, 0.12, 0.10, 0.08, 0.07, 0.20, 0.10]
-#
-#     # 为每部电影分配类型
-#     simulated_genres = np.random.choice(movie_genres, size=len(movies_df), p=genre_weights)
-#     movies_df_demo = movies_df.copy()
-#     movies_df_demo['类型'] = simulated_genres
-#
-#     print(f"✅ 模拟数据创建完成！包含{len(movies_df_demo)}部电影")
-#     print("📌 数据准备完成，可以进行后续分析")
-#
-# else:
-#     print("❌ 电影数据未加载，无法进行分析")
-#
-#
-# # 🎭 电影类型分析 - 第2步：基础统计
-# if 'movies_df_demo' in locals():
-#     # 统计各类型电影数量
-#     genre_counts = movies_df_demo['类型'].value_counts()
-#
-#     print("📊 电影类型分布统计:")
-#     print(f"• 总共有 {len(genre_counts)} 种不同类型")
-#     print(f"• 数据集中共有 {len(movies_df_demo)} 部电影")
-#
-#     print(f"\n🏆 各类型电影数量排行:")
-#     for i, (genre, count) in enumerate(genre_counts.items(), 1):
-#         percentage = (count / len(movies_df_demo)) * 100
-#         print(f"  {i}. {genre}: {count} 部 ({percentage:.1f}%)")
-#
-# else:
-#     print("❌ 请先运行上一个cell创建模拟数据")
-#
-#
-# # 🎭 电影类型分析 - 第3步：基础可视化
-# if 'genre_counts' in locals():
-#     # 创建基础图表：柱状图和饼图
-#     plt.figure(figsize=(12, 5))
-#
-#     # 左图：柱状图
-#     plt.subplot(1, 2, 1)
-#     colors = plt.cm.Set3(np.linspace(0, 1, len(genre_counts)))
-#     bars = plt.bar(genre_counts.index, genre_counts.values, color=colors)
-#     plt.title('🎬 电影类型数量分布', fontsize=14, fontweight='bold')
-#     plt.xlabel('电影类型')
-#     plt.ylabel('电影数量')
-#     plt.xticks(rotation=45)
-#
-#     # 在柱状图上添加数值标签
-#     for bar in bars:
-#         height = bar.get_height()
-#         plt.text(bar.get_x() + bar.get_width() / 2., height + 10,
-#                  f'{int(height)}', ha='center', va='bottom', fontsize=10)
-#
-#     # 右图：饼图
-#     plt.subplot(1, 2, 2)
-#     plt.pie(genre_counts.values, labels=genre_counts.index, autopct='%1.1f%%',
-#             colors=colors, startangle=90)
-#     plt.title('🥧 电影类型占比饼图', fontsize=14, fontweight='bold')
-#
-#     plt.tight_layout()
-#     plt.show()
-#
-#     print("📈 图表说明：")
-#     print("• 柱状图：直观显示各类型的绝对数量")
-#     print("• 饼图：显示各类型在总体中的占比")
-#
-# else:
-#     print("❌ 请先运行前面的cell进行数据统计")
-#
-#
-# # 🎭 电影类型分析 - 第4步：进阶可视化
-# if 'genre_counts' in locals():
-#     # 创建进阶图表：水平柱状图和累积分布图
-#     plt.figure(figsize=(12, 5))
-#
-#     # 左图：水平柱状图（便于阅读长标签）
-#     plt.subplot(1, 2, 1)
-#     colors = plt.cm.Set3(np.linspace(0, 1, len(genre_counts)))
-#     plt.barh(genre_counts.index, genre_counts.values, color=colors)
-#     plt.title('📊 电影类型分布（水平视图）', fontsize=14, fontweight='bold')
-#     plt.xlabel('电影数量')
-#
-#     # 添加数值标签
-#     for i, (label, value) in enumerate(zip(genre_counts.index, genre_counts.values)):
-#         plt.text(value + 20, i, f'{value}', va='center', fontsize=10)
-#
-#     # 右图：累积百分比图
-#     plt.subplot(1, 2, 2)
-#     cumulative_pct = (genre_counts.cumsum() / genre_counts.sum() * 100)
-#     plt.plot(range(len(cumulative_pct)), cumulative_pct.values, 'o-',
-#              linewidth=2, markersize=8, color='darkblue')
-#     plt.title('📈 类型累积分布图', fontsize=14, fontweight='bold')
-#     plt.xlabel('类型排名')
-#     plt.ylabel('累积百分比 (%)')
-#     plt.xticks(range(len(cumulative_pct)), genre_counts.index, rotation=45)
-#     plt.grid(True, alpha=0.3)
-#
-#     # 添加80%线
-#     plt.axhline(y=80, color='red', linestyle='--', alpha=0.7, label='80%线')
-#     plt.legend()
-#
-#     plt.tight_layout()
-#     plt.show()
-#
-#     print("📊 进阶图表说明：")
-#     print("• 水平柱状图：方便阅读类型名称，便于比较")
-#     print("• 累积分布图：显示主要类型的集中度，用于分析长尾效应")
-#
-# else:
-#     print("❌ 请先运行前面的cell进行数据统计")
-#
-#
-# # 🎭 电影类型分析 - 第5步：业务洞察
-# if 'genre_counts' in locals():
-#     print("🎯 电影类型分析洞察:")
-#     print("=" * 40)
-#
-#     # 基础排名信息
-#     print("🏆 类型受欢迎程度排名:")
-#     print(f"• 🥇 最受欢迎类型: {genre_counts.index[0]} ({genre_counts.iloc[0]} 部)")
-#     print(f"• 🥈 第二受欢迎: {genre_counts.index[1]} ({genre_counts.iloc[1]} 部)")
-#     print(f"• 🥉 第三受欢迎: {genre_counts.index[2]} ({genre_counts.iloc[2]} 部)")
-#
-#     # 市场集中度分析
-#     top3_percentage = (genre_counts.iloc[:3].sum() / genre_counts.sum()) * 100
-#     print(f"\n📊 市场集中度分析:")
-#     print(f"• 🔝 前三类型占总数的 {top3_percentage:.1f}%")
-#
-#     # 长尾效应分析
-#     bottom_half = len(genre_counts) // 2
-#     tail_percentage = (genre_counts.iloc[bottom_half:].sum() / genre_counts.sum()) * 100
-#     print(f"• 📉 后半部分类型占 {tail_percentage:.1f}%（长尾效应）")
-#
-#     # 业务建议
-#     print(f"\n💡 业务建议:")
-#     if top3_percentage > 60:
-#         print("• 市场集中度较高，建议重点关注头部类型")
-#
-#     if genre_counts.iloc[0] / genre_counts.iloc[1] > 1.5:
-#         print(f"• {genre_counts.index[0]}类型明显领先，可作为主打类型")
-#
-#     print(f"• 投资策略：优先考虑{genre_counts.index[0]}、{genre_counts.index[1]}、{genre_counts.index[2]}类型")
-#     print(f"• 差异化机会：{genre_counts.index[-1]}、{genre_counts.index[-2]}类型竞争较少")
-#
-# else:
-#     print("❌ 请先运行前面的cell进行数据统计")
+
+# 电影数据概览
+if movies_df is not None:
+    print("🎬 电影数据的基本信息：")
+    print("前5行数据预览：")
+    print(movies_df.head())
+
+    print(f"\n数据形状: {movies_df.shape}")
+    print(f"行数（电影数量）: {movies_df.shape[0]}")
+    print(f"列数（特征数量）: {movies_df.shape[1]}")
+
+    print("\n列名信息：")
+    for i, col in enumerate(movies_df.columns):
+        print(f"第{i + 1}列: {col}")
+
+    print("\n数据类型：")
+    print(movies_df.dtypes)
+else:
+    print("无法显示电影数据概览")
+
+
+# 评论数据概览
+if comments_sample is not None:
+    print("\n💬 评论数据的基本信息：")
+    print("前5行数据预览：")
+    print(comments_sample.head())
+
+    print(f"\n数据形状: {comments_sample.shape}")
+    print(f"行数（评论数量）: {comments_sample.shape[0]}")
+    print(f"列数（特征数量）: {comments_sample.shape[1]}")
+
+    print("\n列名信息：")
+    for i, col in enumerate(comments_sample.columns):
+        print(f"第{i + 1}列: {col}")
+
+    print("\n数据类型：")
+    print(comments_sample.dtypes)
+
+    print("\n缺失值检查：")
+    missing_data = comments_sample.isnull().sum()
+    print(missing_data)
+else:
+    print("无法显示评论数据概览")
+
+
+# 📊 文本长度分析
+if comments_sample is not None:
+    print("📝 评论文本长度分析")
+    print("=" * 40)
+
+    # 假设评论在某一列，我们先检查列名
+    print("可用列名：", list(comments_sample.columns))
+
+    # 尝试找到评论文本列（通常可能叫comment、content、text等）
+    text_columns = []
+    for col in comments_sample.columns:
+        if any(keyword in col.lower() for keyword in ['comment', 'content', 'text', 'review']):
+            text_columns.append(col)
+
+    if text_columns:
+        comment_col = text_columns[0]
+        print(f"找到评论列：{comment_col}")
+
+        # 计算文本长度
+        comments_sample['text_length'] = comments_sample[comment_col].astype(str).str.len()
+
+        print("\n📏 评论长度统计：")
+        length_stats = comments_sample['text_length'].describe()
+        print(length_stats)
+
+        print(f"\n🎯 关键指标解读：")
+        print(f"• 平均评论长度: {length_stats['mean']:.1f} 个字符")
+        print(f"• 最短评论: {length_stats['min']:.0f} 个字符")
+        print(f"• 最长评论: {length_stats['max']:.0f} 个字符")
+        print(f"• 中位数长度: {length_stats['50%']:.1f} 个字符")
+
+    else:
+        print("未找到明确的评论文本列，显示所有列的基本统计：")
+
+
+# 📊 可视化1：评论长度分布直方图
+if comments_sample is not None and 'text_length' in comments_sample.columns:
+
+    # 创建图表
+    plt.figure(figsize=(12, 6))
+
+    # 左图：直方图
+    plt.subplot(1, 2, 1)
+    plt.hist(comments_sample['text_length'], bins=30, alpha=0.7, color='skyblue', edgecolor='black')
+    plt.title('评论长度分布直方图')
+    plt.xlabel('评论长度（字符数）')
+    plt.ylabel('评论数量')
+    plt.grid(True, alpha=0.3)
+
+    # 添加统计信息
+    mean_length = comments_sample['text_length'].mean()
+    plt.axvline(mean_length, color='red', linestyle='--', label=f'平均值: {mean_length:.1f}')
+    plt.legend()
+
+    # 右图：箱线图
+    plt.subplot(1, 2, 2)
+    plt.boxplot(comments_sample['text_length'], labels=['评论长度'])
+    plt.title('评论长度箱线图')
+    plt.ylabel('评论长度（字符数）')
+    plt.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # 数据解读
+    print("🔍 图表解读：")
+    print("• 直方图显示了评论长度的分布模式")
+    print("• 箱线图帮助我们发现异常值（超长或超短的评论）")
+
+    # 找出异常值
+    Q1 = comments_sample['text_length'].quantile(0.25)
+    Q3 = comments_sample['text_length'].quantile(0.75)
+    IQR = Q3 - Q1
+    outliers = comments_sample[
+        (comments_sample['text_length'] < Q1 - 1.5 * IQR) |
+        (comments_sample['text_length'] > Q3 + 1.5 * IQR)
+    ]
+
+    print(f"• 发现 {len(outliers)} 个异常值（特别长或特别短的评论）")
+    if len(outliers) > 0:
+        print(f"• 最长评论有 {outliers['text_length'].max()} 个字符")
+        print(f"• 最短评论有 {outliers['text_length'].min()} 个字符")
+
+
+# 🔥 热门电影分析
+if comments_sample is not None:
+    print("🔥 热门电影分析")
+    print("=" * 40)
+
+    # 检查是否有电影ID或相关列
+    movie_columns = []
+    for col in comments_sample.columns:
+        if any(keyword in col.lower() for keyword in ['movie', 'film', 'id']):
+            movie_columns.append(col)
+
+    if movie_columns:
+        movie_col = movie_columns[0]
+        print(f"使用电影标识列: {movie_col}")
+
+        # 统计每部电影的评论数量
+        movie_comment_counts = comments_sample[movie_col].value_counts()
+
+        print(f"\n📊 评论数统计:")
+        print(f"• 总共有 {len(movie_comment_counts)} 部不同的电影")
+        print(f"• 平均每部电影有 {movie_comment_counts.mean():.1f} 条评论")
+        print(f"• 评论最多的电影有 {movie_comment_counts.max()} 条评论")
+        print(f"• 评论最少的电影有 {movie_comment_counts.min()} 条评论")
+
+        # 显示TOP 10热门电影
+        print(f"\n🏆 TOP 10 热门电影（按评论数量）:")
+        top_movies = movie_comment_counts.head(10)
+        for i, (movie_id, count) in enumerate(top_movies.items(), 1):
+            print(f"{i:2d}. 电影ID {movie_id}: {count} 条评论")
+
+        # 可视化热门电影
+        plt.figure(figsize=(12, 6))
+
+        # 左图：TOP 10电影评论数
+        plt.subplot(1, 2, 1)
+        top_movies.plot(kind='bar', color='lightcoral')
+        plt.title('🏆 TOP 10 热门电影')
+        plt.xlabel('电影ID')
+        plt.ylabel('评论数量')
+        plt.xticks(rotation=45)
+        plt.grid(True, alpha=0.3)
+
+        # 右图：评论数分布
+        plt.subplot(1, 2, 2)
+        plt.hist(movie_comment_counts.values, bins=20, alpha=0.7, color='lightcoral', edgecolor='black')
+        plt.title('📊 电影评论数分布')
+        plt.xlabel('评论数量')
+        plt.ylabel('电影数量')
+        plt.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        plt.show()
+
+    else:
+        print("未找到电影相关列，显示数据集的整体统计")
+
+
+# 🎭 电影类型分析 - 第1步：数据准备
+print("🎭 电影类型偏好分析 - 数据准备阶段")
+print("=" * 50)
+
+if movies_df is not None:
+    # 1️⃣ 检查现有数据结构
+    print("📋 电影数据列名:")
+    for i, col in enumerate(movies_df.columns):
+        print(f"  {i + 1}. {col}")
+
+    # 2️⃣ 创建模拟类型数据（实际项目中替换为真实数据）
+    print("\n🎨 创建模拟电影类型数据来演示分析方法...")
+
+    # 设置随机种子确保结果可重复
+    np.random.seed(42)
+
+    # 定义电影类型和权重分布（模拟真实市场分布）
+    movie_genres = ['动作', '喜剧', '爱情', '科幻', '悬疑', '动画', '剧情', '恐怖']
+    genre_weights = [0.15, 0.18, 0.12, 0.10, 0.08, 0.07, 0.20, 0.10]
+
+    # 为每部电影分配类型
+    simulated_genres = np.random.choice(movie_genres, size=len(movies_df), p=genre_weights)
+    movies_df_demo = movies_df.copy()
+    movies_df_demo['类型'] = simulated_genres
+
+    print(f"✅ 模拟数据创建完成！包含{len(movies_df_demo)}部电影")
+    print("📌 数据准备完成，可以进行后续分析")
+
+else:
+    print("❌ 电影数据未加载，无法进行分析")
+
+
+# 🎭 电影类型分析 - 第2步：基础统计
+if 'movies_df_demo' in locals():
+    # 统计各类型电影数量
+    genre_counts = movies_df_demo['类型'].value_counts()
+
+    print("📊 电影类型分布统计:")
+    print(f"• 总共有 {len(genre_counts)} 种不同类型")
+    print(f"• 数据集中共有 {len(movies_df_demo)} 部电影")
+
+    print(f"\n🏆 各类型电影数量排行:")
+    for i, (genre, count) in enumerate(genre_counts.items(), 1):
+        percentage = (count / len(movies_df_demo)) * 100
+        print(f"  {i}. {genre}: {count} 部 ({percentage:.1f}%)")
+
+else:
+    print("❌ 请先运行上一个cell创建模拟数据")
+
+
+# 🎭 电影类型分析 - 第3步：基础可视化
+if 'genre_counts' in locals():
+    # 创建基础图表：柱状图和饼图
+    plt.figure(figsize=(12, 5))
+
+    # 左图：柱状图
+    plt.subplot(1, 2, 1)
+    colors = plt.cm.Set3(np.linspace(0, 1, len(genre_counts)))
+    bars = plt.bar(genre_counts.index, genre_counts.values, color=colors)
+    plt.title('🎬 电影类型数量分布', fontsize=14, fontweight='bold')
+    plt.xlabel('电影类型')
+    plt.ylabel('电影数量')
+    plt.xticks(rotation=45)
+
+    # 在柱状图上添加数值标签
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2., height + 10,
+                 f'{int(height)}', ha='center', va='bottom', fontsize=10)
+
+    # 右图：饼图
+    plt.subplot(1, 2, 2)
+    plt.pie(genre_counts.values, labels=genre_counts.index, autopct='%1.1f%%',
+            colors=colors, startangle=90)
+    plt.title('🥧 电影类型占比饼图', fontsize=14, fontweight='bold')
+
+    plt.tight_layout()
+    plt.show()
+
+    print("📈 图表说明：")
+    print("• 柱状图：直观显示各类型的绝对数量")
+    print("• 饼图：显示各类型在总体中的占比")
+
+else:
+    print("❌ 请先运行前面的cell进行数据统计")
+
+
+# 🎭 电影类型分析 - 第4步：进阶可视化
+if 'genre_counts' in locals():
+    # 创建进阶图表：水平柱状图和累积分布图
+    plt.figure(figsize=(12, 5))
+
+    # 左图：水平柱状图（便于阅读长标签）
+    plt.subplot(1, 2, 1)
+    colors = plt.cm.Set3(np.linspace(0, 1, len(genre_counts)))
+    plt.barh(genre_counts.index, genre_counts.values, color=colors)
+    plt.title('📊 电影类型分布（水平视图）', fontsize=14, fontweight='bold')
+    plt.xlabel('电影数量')
+
+    # 添加数值标签
+    for i, (label, value) in enumerate(zip(genre_counts.index, genre_counts.values)):
+        plt.text(value + 20, i, f'{value}', va='center', fontsize=10)
+
+    # 右图：累积百分比图
+    plt.subplot(1, 2, 2)
+    cumulative_pct = (genre_counts.cumsum() / genre_counts.sum() * 100)
+    plt.plot(range(len(cumulative_pct)), cumulative_pct.values, 'o-',
+             linewidth=2, markersize=8, color='darkblue')
+    plt.title('📈 类型累积分布图', fontsize=14, fontweight='bold')
+    plt.xlabel('类型排名')
+    plt.ylabel('累积百分比 (%)')
+    plt.xticks(range(len(cumulative_pct)), genre_counts.index, rotation=45)
+    plt.grid(True, alpha=0.3)
+
+    # 添加80%线
+    plt.axhline(y=80, color='red', linestyle='--', alpha=0.7, label='80%线')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+    print("📊 进阶图表说明：")
+    print("• 水平柱状图：方便阅读类型名称，便于比较")
+    print("• 累积分布图：显示主要类型的集中度，用于分析长尾效应")
+
+else:
+    print("❌ 请先运行前面的cell进行数据统计")
+
+
+# 🎭 电影类型分析 - 第5步：业务洞察
+if 'genre_counts' in locals():
+    print("🎯 电影类型分析洞察:")
+    print("=" * 40)
+
+    # 基础排名信息
+    print("🏆 类型受欢迎程度排名:")
+    print(f"• 🥇 最受欢迎类型: {genre_counts.index[0]} ({genre_counts.iloc[0]} 部)")
+    print(f"• 🥈 第二受欢迎: {genre_counts.index[1]} ({genre_counts.iloc[1]} 部)")
+    print(f"• 🥉 第三受欢迎: {genre_counts.index[2]} ({genre_counts.iloc[2]} 部)")
+
+    # 市场集中度分析
+    top3_percentage = (genre_counts.iloc[:3].sum() / genre_counts.sum()) * 100
+    print(f"\n📊 市场集中度分析:")
+    print(f"• 🔝 前三类型占总数的 {top3_percentage:.1f}%")
+
+    # 长尾效应分析
+    bottom_half = len(genre_counts) // 2
+    tail_percentage = (genre_counts.iloc[bottom_half:].sum() / genre_counts.sum()) * 100
+    print(f"• 📉 后半部分类型占 {tail_percentage:.1f}%（长尾效应）")
+
+    # 业务建议
+    print(f"\n💡 业务建议:")
+    if top3_percentage > 60:
+        print("• 市场集中度较高，建议重点关注头部类型")
+
+    if genre_counts.iloc[0] / genre_counts.iloc[1] > 1.5:
+        print(f"• {genre_counts.index[0]}类型明显领先，可作为主打类型")
+
+    print(f"• 投资策略：优先考虑{genre_counts.index[0]}、{genre_counts.index[1]}、{genre_counts.index[2]}类型")
+    print(f"• 差异化机会：{genre_counts.index[-1]}、{genre_counts.index[-2]}类型竞争较少")
+
+else:
+    print("❌ 请先运行前面的cell进行数据统计")
 
 
 # 导入词云相关库
@@ -581,5 +581,1057 @@ import jieba
 import jieba.analyse
 from collections import Counter
 import matplotlib.pyplot as plt
+import re
 
 print("✅ 词云库安装完成！")
+
+# 📝 文本预处理函数
+def preprocess_text_for_wordcloud(text_series, custom_stopwords=None):
+    """
+    为词云生成预处理文本数据
+
+    Parameters:
+    text_series: pandas Series, 包含文本数据的Series
+    custom_stopwords: list, 自定义停用词列表
+
+    Returns:
+    processed_text: str, 处理后的文本字符串
+    word_freq: dict, 词频统计字典
+    """
+    print("🔄 开始文本预处理...")
+
+    # 1. 合并所有文本
+    all_text = ' '.join(text_series.astype(str).tolist())
+    print(f"📊 原始文本总长度: {len(all_text)} 字符")
+
+    # 2. 基本清理
+    # 移除特殊字符，保留中文、英文、数字
+    cleaned_text = re.sub(r'[^\u4e00-\u9fff\u0041-\u005a\u0061-\u007aa-zA-Z0-9\s]', '', all_text)
+    print(f"🧹 清理后文本长度: {len(cleaned_text)} 字符")
+
+    # 3. 使用jieba进行中文分词
+    print("✂️ 正在进行中文分词...")
+    words = jieba.lcut(cleaned_text)
+    print(f"📝 分词结果数量: {len(words)} 个词")
+
+    # 4. 定义停用词（包含常见无意义词汇）
+    default_stopwords = {
+        '的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都', '一个', '一', '上', '也', '很',
+        '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这个', '但是', '他', '她',
+        '能', '还', '如果', '可以', '这样', '那么', '什么', '知道', '这', '那', '里', '被', '从', '把',
+        '个', '来', '对', '两', '三', '等', '及', '与', '以', '将', '而', '或', '等等', '如此', '此',
+        '因为', '所以', '但', '却', '然而', '不过', '只是', '仅仅', '简直', '实在', '确实', '真的',
+        '电影', '影片', '片子', '这部', '这个', '觉得', '感觉', '认为', '以为', '没', '挺', '太',
+        '特别', '非常', '十分', '比较', '更', '最', '还是', '就是', '只', '才', '又', '再', '还',
+        '已经', '正在', '一直', '一定', '肯定', '应该', '可能', '或许', '也许', '大概', '基本',
+        '完全', '绝对', '总是', '从来', '向来', '一向', '素来', '往往', '常常', '时常', '经常'
+    }
+
+    # 合并自定义停用词
+    if custom_stopwords:
+        default_stopwords.update(custom_stopwords)
+
+    #5. 过滤停用词和短词
+    filtered_words = [
+        word for word in words
+        if len(word) >= 2 and word not in default_stopwords and word.strip()
+    ]
+
+    print(f"🔍 过滤后保留词汇: {len(filtered_words)} 个")
+
+    # 6. 统计词频
+    word_freq = Counter(filtered_words)
+    print(f"📈 不重复词汇数量: {len(word_freq)} 个")
+
+    # 7. 生成词云用的文本
+    processed_text = ' '.join(filtered_words)
+
+    print("✅ 文本预处理完成！")
+    return processed_text, word_freq
+
+print("🛠️ 文本预处理函数定义完成！")
+
+
+# 🔧 中文字体检测和设置工具
+import os
+import platform
+from pathlib import Path
+
+def find_chinese_font():
+    """
+        智能检测系统中可用的中文字体
+
+        Returns:
+            str: 可用的中文字体路径，如果没有找到则返回None
+        """
+    print("🔍 正在检测系统中的中文字体...")
+
+    # 常见中文字体列表（按优先级排序）
+    font_names = [
+        'SimHei.ttf',  # 黑体
+        'Microsoft YaHei.ttf',  # 微软雅黑
+        'SimSun.ttf',  # 宋体
+        'KaiTi.ttf',  # 楷体
+        'FangSong.ttf',  # 仿宋
+        'simsun.ttc',  # 宋体TTC版本
+        'msyh.ttc',  # 微软雅黑TTC版本
+        'NotoSansCJK-Regular.ttc',  # Google Noto字体
+        'SourceHanSans-Regular.otf',  # 思源黑体
+    ]
+
+    # 根据不同操作系统定义字体搜索路径
+    if platform.system() == "Windows":
+        font_dirs = [
+            "C:/Windows/Fonts/",
+            "C:/Windows/System32/Fonts/",
+            os.path.expanduser("~") + "/AppData/Local/Microsoft/Windows/Fonts/"
+        ]
+    elif platform.system() == "Darwin":  # macOS
+        font_dirs = [
+            "/System/Library/Fonts/",
+            "/Library/Fonts/",
+            os.path.expanduser("~") + "/Library/Fonts/",
+            "/System/Library/Assets/com_apple_MobileAsset_Font6/"
+        ]
+    else:  # Linux
+        font_dirs = [
+            "/usr/share/fonts/",
+            "/usr/local/share/fonts/",
+            os.path.expanduser("~") + "/.fonts/",
+            "/usr/share/fonts/truetype/",
+            "/usr/share/fonts/opentype/"
+        ]
+
+    # 搜索字体文件
+    for font_name in font_names:
+        for font_dir in font_dirs:
+            font_path = os.path.join(font_dir, font_name)
+            if os.path.exists(font_path):
+                print(f"✅ 找到中文字体: {font_name}")
+                print(f"📂 字体路径: {font_path}")
+                return font_path
+
+    # 如果没有找到任何字体，尝试递归搜索
+    print("🔄 在系统字体目录中递归搜索...")
+    for font_dir in font_dirs:
+        if os.path.exists(font_dir):
+            for root, dirs, files in os.walk(font_dir):
+                for file in files:
+                    if any(font_name.lower() in file.lower() for font_name in ['simhei', 'yahei', 'simsun']):
+                        font_path = os.path.join(root, file)
+                        print(f"✅ 递归搜索找到字体: {file}")
+                        print(f"📂 字体路径: {font_path}")
+                        return font_path
+
+    print("❌ 未找到任何中文字体文件")
+    return None
+
+
+def get_system_chinese_fonts():
+    """
+    获取系统中所有可用的中文字体列表
+
+    Returns:
+        list: 可用字体路径列表
+    """
+    try:
+        import matplotlib.font_manager as fm
+
+        # 获取系统中所有字体
+        font_list = fm.findSystemFonts()
+        chinese_fonts = []
+
+        # 筛选中文字体
+        chinese_keywords = ['sim', 'hei', 'yahei', 'kai', 'song', 'fang', 'noto', 'source']
+
+        for font_path in font_list:
+            font_name = os.path.basename(font_path).lower()
+            if any(keyword in font_name for keyword in chinese_keywords):
+                chinese_fonts.append(font_path)
+
+        return chinese_fonts[:5]  # 返回前5个
+    except:
+        return []
+
+
+# 检测字体
+detected_font = find_chinese_font()
+if detected_font:
+    print(f"🎉 将使用字体: {detected_font}")
+else:
+    print("⚠️ 未检测到中文字体，将尝试其他解决方案...")
+    # 显示matplotlib中可用的中文字体
+    chinese_fonts = get_system_chinese_fonts()
+    if chinese_fonts:
+        print("📋 系统中可能的中文字体:")
+        for i, font in enumerate(chinese_fonts[:3], 1):
+            print(f"  {i}. {os.path.basename(font)}")
+        detected_font = chinese_fonts[0]
+        print(f"🎯 将尝试使用: {os.path.basename(detected_font)}")
+
+
+# 🌤️ 优化版词云生成函数 - 解决中文乱码问题
+def create_wordcloud_analysis_fixed(text_series, title='词云分析', figsize=(20, 12)):
+    """
+    创建综合的词云分析图表（优化版）
+
+    Parameters:
+    text_series: pandas Series, 文本数据
+    title: str, 图表标题
+    figsize: tuple, 图片大小
+    """
+    print(f"🌤️ 开始生成 {title} (优化版)...")
+
+    # 1. 文本预处理
+    processed_text, word_freq = preprocess_text_for_wordcloud(text_series)
+
+    if len(word_freq) == 0:
+        print("⚠️ 没有有效的词汇，无法生成词云")
+        return
+
+    # 2. 智能选择字体
+    print("🎨 配置中文字体...")
+    font_path = None
+
+    # 尝试使用检测到的字体
+    if 'detected_font' in globals() and detected_font:
+        font_path = detected_font
+        print(f"✅ 使用检测到的字体: {os.path.basename(font_path)}")
+    else:
+        # 备用字体检测
+        font_path = find_chinese_font()
+        if font_path:
+            print(f"✅ 使用备用检测字体: {os.path.basename(font_path)}")
+
+    # 3. 创建词云配置
+    wordcloud_config = {
+        'width': 800,
+        'height': 600,
+        'max_words': 200,
+        'max_font_size': 80,
+        'min_font_size': 10,
+        'background_color': 'white',
+        'colormap': 'viridis',
+        'relative_scaling': 0.5,
+        'random_state': 42
+    }
+
+    # 添加字体配置
+    if font_path:
+        wordcloud_config['font_path'] = font_path
+    else:
+        print("⚠️ 未找到中文字体，使用系统默认字体（可能出现乱码）")
+        # 尝试设置matplotlib的中文字体
+        try:
+            import matplotlib.font_manager as fm
+            plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'Lucida Grande']
+            plt.rcParams['axes.unicode_minus'] = False
+            print("🔧 已设置matplotlib备用字体配置")
+        except:
+            pass
+
+    # 4. 生成主词云
+    print("🎨 生成词云图像...")
+    try:
+        wordcloud = WordCloud(**wordcloud_config).generate(processed_text)
+        print("✅ 词云生成成功！")
+    except Exception as e:
+        print(f"❌ 词云生成失败: {str(e)}")
+        # 使用简化配置重试
+        simple_config = {
+            'width': 800,
+            'height': 600,
+            'max_words': 100,
+            'background_color': 'white',
+            'random_state': 42
+        }
+        try:
+            wordcloud = WordCloud(**simple_config).generate(processed_text)
+            print("✅ 使用简化配置生成词云成功！")
+        except Exception as e2:
+            print(f"❌ 简化配置也失败: {str(e2)}")
+            return None, None
+
+    # 5. 创建多子图分析
+    fig, axes = plt.subplots(2, 3, figsize=figsize)
+    fig.suptitle(f'🌤️ {title} - 综合分析面板', fontsize=20, fontweight='bold', y=0.98)
+
+    # 子图1：主词云
+    axes[0, 0].imshow(wordcloud, interpolation='bilinear')
+    axes[0, 0].axis('off')
+    axes[0, 0].set_title('🌤️ 主要词云图', fontsize=14, fontweight='bold')
+
+    # 子图2：高频词汇柱状图
+    top_words = dict(word_freq.most_common(20))
+    y_pos = range(len(top_words))
+    axes[0, 1].barh(list(top_words.keys())[::-1], list(top_words.values())[::-1],
+                    color=plt.cm.viridis(np.linspace(0, 1, len(top_words))))
+    axes[0, 1].set_title('📊 Top 20 高频词汇', fontsize=14, fontweight='bold')
+    axes[0, 1].set_xlabel('出现频次')
+
+    # 子图3：词频分布直方图
+    freq_values = list(word_freq.values())
+    axes[0, 2].hist(freq_values, bins=30, color='skyblue', alpha=0.7, edgecolor='black')
+    axes[0, 2].set_title('📈 词频分布直方图', fontsize=14, fontweight='bold')
+    axes[0, 2].set_xlabel('词频')
+    axes[0, 2].set_ylabel('词汇数量')
+    axes[0, 2].grid(True, alpha=0.3)
+
+    # 子图4：不同主题的词云（如果有足够字体支持）
+    try:
+        hot_config = wordcloud_config.copy()
+        hot_config.update({
+            'width': 400,
+            'height': 300,
+            'max_words': 100,
+            'background_color': 'black',
+            'colormap': 'hot'
+        })
+        wordcloud_hot = WordCloud(**hot_config).generate(processed_text)
+        axes[1, 0].imshow(wordcloud_hot, interpolation='bilinear')
+    except:
+        # 如果失败，显示简单的文字说明
+        axes[1, 0].text(0.5, 0.5, '🔥 热力主题词云\n(字体限制)',
+                        ha='center', va='center', fontsize=12,
+                        transform=axes[1, 0].transAxes)
+
+    axes[1, 0].axis('off')
+    axes[1, 0].set_title('🔥 热力主题词云', fontsize=14, fontweight='bold')
+
+    # 子图5：词频累积分布
+    sorted_freq = sorted(freq_values, reverse=True)
+    cumulative_pct = np.cumsum(sorted_freq) / sum(sorted_freq) * 100
+    axes[1, 1].plot(range(1, len(cumulative_pct) + 1), cumulative_pct, 'o-', linewidth=2, markersize=4)
+    axes[1, 1].set_title('📈 词频累积分布', fontsize=14, fontweight='bold')
+    axes[1, 1].set_xlabel('词汇排名')
+    axes[1, 1].set_ylabel('累积占比 (%)')
+    axes[1, 1].grid(True, alpha=0.3)
+
+    # 子图6：词长分布
+    word_lengths = [len(word) for word in word_freq.keys()]
+    length_counter = Counter(word_lengths)
+    axes[1, 2].bar(length_counter.keys(), length_counter.values(),
+                   color='lightcoral', alpha=0.7, edgecolor='black')
+    axes[1, 2].set_title('📏 词汇长度分布', fontsize=14, fontweight='bold')
+    axes[1, 2].set_xlabel('词汇长度（字符数）')
+    axes[1, 2].set_ylabel('词汇数量')
+    axes[1, 2].grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # 6. 输出详细统计信息
+    print(f"\n📊 {title} - 详细统计报告:")
+    print("=" * 50)
+    print(f"• 📝 总词汇数: {sum(word_freq.values())} 个")
+    print(f"• 🔤 不重复词汇: {len(word_freq)} 个")
+    print(f"• 📈 平均词频: {sum(word_freq.values()) / len(word_freq):.2f}")
+    print(f"• 🏆 最高频词: '{list(word_freq.keys())[0]}' (出现 {list(word_freq.values())[0]} 次)")
+
+    # Top 10 词汇
+    print(f"\n🏆 Top 10 高频词汇:")
+    for i, (word, freq) in enumerate(word_freq.most_common(10), 1):
+        percentage = (freq / sum(word_freq.values())) * 100
+        print(f"  {i:2d}. {word:8s} - {freq:4d}次 ({percentage:5.2f}%)")
+
+    # 长尾分析
+    total_words = len(word_freq)
+    single_occurrence = sum(1 for freq in word_freq.values() if freq == 1)
+    print(f"\n📉 长尾效应分析:")
+    print(f"• 只出现1次的词汇: {single_occurrence} 个 ({single_occurrence / total_words * 100:.1f}%)")
+
+    top_10_percentage = sum(list(word_freq.values())[:10]) / sum(word_freq.values()) * 100
+    print(f"• Top 10 词汇占总词频: {top_10_percentage:.1f}%")
+
+    # 字体使用报告
+    if font_path:
+        print(f"\n🎨 字体配置:")
+        print(f"• 使用字体: {os.path.basename(font_path)}")
+        print(f"• 字体路径: {font_path}")
+    else:
+        print(f"\n⚠️ 字体配置:")
+        print(f"• 使用系统默认字体（可能出现中文乱码）")
+
+    return word_freq, wordcloud
+
+print("🌤️ 优化版词云分析函数定义完成！")
+
+
+# 🎬 应用词云分析到豆瓣电影评论数据
+print("🎬 开始分析豆瓣电影评论数据...")
+print("=" * 60)
+
+if comments_sample is not None:
+    print(f"📊 评论数据概览:")
+    print(f"• 评论总数: {len(comments_sample)}")
+    print(f"• 数据列名: {list(comments_sample.columns)}")
+    print("\n前5条评论预览:")
+    print(comments_sample.head())
+
+    # 检查评论文本列（通常是 'comment' 或 'content' 或 'text'）
+    text_columns = [col for col in comments_sample.columns if
+                   any(keyword in col.lower() for keyword in ['comment', 'content', 'text', '评论', '内容'])]
+
+    if text_columns:
+        text_col = text_columns[0]
+        print(f"\n✅ 找到评论文本列: '{text_col}'")
+
+        # 数据质量检查
+        total_comments = len(comments_sample)
+        non_null_comments = comments_sample[text_col].notna().sum()
+        print(f"📈 数据质量报告:")
+        print(f"• 总评论数: {total_comments}")
+        print(f"• 非空评论: {non_null_comments} ({non_null_comments/total_comments*100:.1f}%)")
+
+        if non_null_comments > 0:
+            # 过滤有效评论
+            valid_comments = comments_sample[comments_sample[text_col].notna()][text_col]
+
+            # 生成综合词云分析
+            print(f"\n🌤️ 正在生成豆瓣电影评论词云分析...")
+            word_freq, wordcloud_obj = create_wordcloud_analysis_fixed(
+                valid_comments,
+                title='豆瓣电影评论词云分析',
+                figsize=(20, 12)
+            )
+
+        else:
+            print("❌ 没有有效的评论文本数据")
+    else:
+        print("❌ 未找到评论文本列，尝试使用第一个文本列...")
+        # 如果没找到明显的文本列，尝试使用第一个object类型的列
+        text_cols = comments_sample.select_dtypes(include=['object']).columns
+        if len(text_cols) > 0:
+            text_col = text_cols[0]
+            print(f"🔍 使用列: '{text_col}'")
+
+            valid_comments = comments_sample[comments_sample[text_col].notna()][text_col]
+            if len(valid_comments) > 0:
+                word_freq, wordcloud_obj = create_wordcloud_analysis_fixed(
+                    valid_comments,
+                    title=f"豆瓣数据分析-{text_col}列",
+                    figsize=(20, 12)
+                )
+        else:
+            print("❌ 无法找到合适的文本列进行分析")
+
+else:
+    print("❌ 评论数据未加载，创建模拟数据进行演示...")
+
+    # 创建模拟电影评论数据
+    sample_comments = [
+                          "这部电影非常好看，剧情紧凑，演员演技很棒",
+                          "导演拍得不错，特效制作精良，值得观看",
+                          "故事情节有些老套，但是整体还可以",
+                          "演员表现力很强，情感表达到位，推荐",
+                          "画面很美，音乐也不错，就是节奏有点慢",
+                          "剧情深刻，让人思考，是一部有内涵的作品",
+                          "动作场面精彩，视觉冲击力强，很刺激",
+                          "情感细腻，角色塑造成功，很感人",
+                          "制作精美，细节处理得当，专业水准高",
+                          "创意新颖，想象力丰富，给人惊喜"
+                      ] * 100  # 重复100次增加数据量
+
+    # 添加更多中文评论
+    additional_comments = [
+                              "精彩绝伦", "感人至深", "制作精良", "剧情紧凑", "演技出色",
+                              "视觉震撼", "情感真挚", "创意十足", "节奏紧张", "画面唯美",
+                              "音效出色", "主题深刻", "角色丰满", "对白精彩", "场景宏大"
+                          ] * 200
+
+    sample_comments.extend(additional_comments)
+
+    # 转换为pandas Series
+    demo_comments = pd.Series(sample_comments)
+
+    print(f"📊 创建了 {len(demo_comments)} 条模拟评论数据")
+    print("🌤️ 开始生成模拟数据词云分析...")
+
+    word_freq, wordcloud_obj = create_wordcloud_analysis_fixed(
+        demo_comments,
+        title="模拟电影评论词云分析",
+        figsize=(20, 12)
+    )
+
+
+# 📅 电影年代分析 - 第1步：数据准备
+print("📅 电影年代趋势分析 - 数据准备阶段")
+print("=" * 60)
+
+if 'movies_df_demo' in locals():
+    print("💡 就像分析时尚潮流一样，我们来看看哪个年代的电影最受欢迎！")
+
+    # 创建模拟年份数据（实际使用时替换为真实年份列）
+    print("\n🎨 创建模拟年份数据来演示分析方法...")
+
+    # 模拟电影年份分布（倾向于近年的电影更多）
+    np.random.seed(42)
+
+    # 创建年份分布（1980-2023年，近年电影更多）
+    years = []
+    for year in range(1980, 2024):
+        # 年份越近，电影数量越多（模拟现实情况）
+        weight = (year - 1980) / (2023 - 1980)  # 权重随年份增加
+        count = int(np.random.poisson(weight * 20))  # 基于权重生成数量
+        years.extend([year] * count)
+
+    # 随机选择与movies_df相同数量的年份
+    simulated_years = np.random.choice(years, size=len(movies_df_demo))
+    movies_df_demo['年份'] = simulated_years
+
+    # 按年代分组分析
+    movies_df_demo['年代'] = (movies_df_demo['年份'] // 10) * 10  # 按十年分组
+
+    print("✅ 年代数据准备完成！")
+
+else:
+    print("❌ 请先运行前面的cell创建电影数据")
+
+
+# 📅 电影年代分析 - 第2步：基础统计
+if '年份' in movies_df_demo.columns:
+    # 统计分析
+    year_counts = movies_df_demo['年份'].value_counts().sort_index()
+    decade_counts = movies_df_demo['年代'].value_counts().sort_index()
+
+    print("📊 年代分布统计:")
+    print(f"• 时间跨度: {movies_df_demo['年份'].min()}年 - {movies_df_demo['年份'].max()}年")
+    print(f"• 跨越年数: {movies_df_demo['年份'].max() - movies_df_demo['年份'].min()} 年")
+
+    print(f"\n🏆 各年代电影数量:")
+    for decade, count in decade_counts.items():
+        percentage = (count / len(movies_df_demo)) * 100
+        print(f"  • {decade}年代: {count} 部 ({percentage:.1f}%)")
+
+    print(f"\n📈 关键统计指标:")
+    print(
+        f"• 平均每年: {len(movies_df_demo) / (movies_df_demo['年份'].max() - movies_df_demo['年份'].min()):.1f} 部电影")
+    print(f"• 最多电影的年份: {year_counts.idxmax()}年 ({year_counts.max()} 部)")
+    print(f"• 最热门年代: {decade_counts.idxmax()}年代 ({decade_counts.max()} 部)")
+
+else:
+    print("❌ 请先运行上一个cell进行年代数据准备")
+
+# 📅 电影年代分析 - 第3步：基础可视化
+if 'year_counts' in locals() and 'decade_counts' in locals():
+    # 创建基础图表：趋势图和柱状图
+    plt.figure(figsize=(12, 5))
+
+    # 左图：年份趋势线图
+    plt.subplot(1, 2, 1)
+    plt.plot(year_counts.index, year_counts.values, marker='o', linewidth=2, markersize=4, color='blue')
+    plt.title('📈 电影数量年份趋势', fontsize=14, fontweight='bold')
+    plt.xlabel('年份')
+    plt.ylabel('电影数量')
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+
+    # 右图：年代柱状图
+    plt.subplot(1, 2, 2)
+    colors = plt.cm.viridis(np.linspace(0, 1, len(decade_counts)))
+    bars = plt.bar([f"{int(d)}s" for d in decade_counts.index], decade_counts.values, color=colors)
+    plt.title('📊 各年代电影数量', fontsize=14, fontweight='bold')
+    plt.xlabel('年代')
+    plt.ylabel('电影数量')
+    plt.xticks(rotation=45)
+
+    # 添加数值标签
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2., height + 20,
+                 f'{int(height)}', ha='center', va='bottom', fontsize=10)
+
+    plt.tight_layout()
+    plt.show()
+
+    print("📈 基础图表说明：")
+    print("• 趋势图：显示电影产量随时间的变化")
+    print("• 柱状图：对比各年代的总体产量")
+
+else:
+    print("❌ 请先运行前面的cell进行数据统计")
+
+# 📅 电影年代分析 - 第4步：进阶可视化
+if 'year_counts' in locals() and 'decade_counts' in locals():
+    # 创建进阶图表：饼图、累积图和增长率
+    plt.figure(figsize=(15, 5))
+
+    # 左图：年代饼图
+    plt.subplot(1, 3, 1)
+    colors = plt.cm.viridis(np.linspace(0, 1, len(decade_counts)))
+    plt.pie(decade_counts.values, labels=[f"{int(d)}s" for d in decade_counts.index],
+            autopct='%1.1f%%', colors=colors, startangle=90)
+    plt.title('🥧 年代占比分布', fontsize=14, fontweight='bold')
+
+    # 中图：累积增长图
+    plt.subplot(1, 3, 2)
+    cumulative_movies = year_counts.cumsum()
+    plt.fill_between(cumulative_movies.index, cumulative_movies.values, alpha=0.6, color='lightblue')
+    plt.plot(cumulative_movies.index, cumulative_movies.values, linewidth=2, color='darkblue')
+    plt.title('📈 电影总数累积增长', fontsize=14, fontweight='bold')
+    plt.xlabel('年份')
+    plt.ylabel('累积电影数量')
+    plt.grid(True, alpha=0.3)
+
+    # 右图：年代增长率
+    plt.subplot(1, 3, 3)
+    decade_growth = decade_counts.pct_change().fillna(0) * 100
+    colors_growth = ['red' if x < 0 else 'green' for x in decade_growth.values]
+    plt.bar(range(len(decade_growth)), decade_growth.values, color=colors_growth, alpha=0.7)
+    plt.title('📊 年代增长率变化', fontsize=14, fontweight='bold')
+    plt.xlabel('年代')
+    plt.ylabel('增长率 (%)')
+    plt.xticks(range(len(decade_growth)), [f"{int(d)}s" for d in decade_growth.index], rotation=45)
+    plt.axhline(y=0, color='black', linestyle='-', alpha=0.3)
+
+    # 添加增长率数值标签
+    for i, v in enumerate(decade_growth.values):
+        plt.text(i, v + (5 if v >= 0 else -10), f'{v:.0f}%',
+                 ha='center', va='bottom' if v >= 0 else 'top', fontsize=9)
+
+    plt.tight_layout()
+    plt.show()
+
+    print("📊 进阶图表说明：")
+    print("• 饼图：各年代在总体中的占比")
+    print("• 累积图：电影总数的历史增长轨迹")
+    print("• 增长率图：各年代间的增长/下降幅度")
+
+else:
+    print("❌ 请先运行前面的cell进行数据统计")
+
+
+# 📅 电影年代分析 - 第5步：业务洞察
+if 'year_counts' in locals() and 'decade_counts' in locals():
+    print("🎯 年代分析洞察:")
+    print("=" * 40)
+
+    # 找出最活跃的年代
+    peak_decade = decade_counts.idxmax()
+    peak_count = decade_counts.max()
+    print(f"🔥 黄金年代: {peak_decade}年代 ({peak_count} 部电影)")
+
+    # 分析近年趋势
+    recent_years = movies_df_demo[movies_df_demo['年份'] >= 2010]['年份'].value_counts().sort_index()
+    if len(recent_years) > 1:
+        recent_trend = "上升" if recent_years.iloc[-1] > recent_years.iloc[0] else "下降"
+        print(f"📈 近年趋势: 2010年后总体呈{recent_trend}趋势")
+
+    # 计算年代间隔的平均增长
+    if len(decade_counts) > 1:
+        total_growth = (decade_counts.iloc[-1] - decade_counts.iloc[0]) / decade_counts.iloc[0] * 100
+        print(f"📊 整体增长: 从{decade_counts.index[0]}年代到{decade_counts.index[-1]}年代，增长了{total_growth:.1f}%")
+
+    # 分析电影产业发展阶段
+    print(f"\n🎬 电影产业发展阶段分析:")
+    for decade, count in decade_counts.items():
+        if decade <= 1990:
+            stage = "起步期"
+        elif decade <= 2000:
+            stage = "发展期"
+        elif decade <= 2010:
+            stage = "繁荣期"
+        else:
+            stage = "数字化时代"
+        print(f"  • {decade}年代 ({count}部): {stage}")
+
+    # 投资建议
+    print(f"\n💰 投资建议:")
+    if peak_decade >= 2010:
+        print("• 现代电影市场活跃，数字化投资价值高")
+    print(f"• 重点关注{peak_decade}年代风格的电影")
+    print("• 考虑怀旧题材与现代制作技术的结合")
+
+else:
+    print("❌ 请先运行前面的cell进行数据统计")
+
+
+# 😊 案例2.1：简单情感分析 - "观众到底喜不喜欢？"
+print("\n" + "="*60)
+print("😊 评论情感分析")
+print("=" * 60)
+
+print("🎯 分析目标:")
+print("• 了解观众对电影的整体评价倾向")
+print("• 识别正面、负面和中性评论的比例")
+print("• 分析情感变化趋势")
+print("• 探索评论长度与情感的关系")
+print("• 提供数据驱动的营销建议")
+
+if comments_sample is not None:
+    print("\n💡 就像看表情包一样，我们来分析评论的情感倾向！")
+
+    # 找到评论文本列
+    text_column = None
+    for col in comments_sample.columns:
+        if any(keyword in col.lower() for keyword in ['comment', 'content', 'text', 'review', '评论', '内容']):
+            text_column = col
+            break
+
+    if text_column is None:
+        # 如果没有找到明确的文本列，我们创建模拟数据来演示
+        print("🎨 创建模拟评论数据来演示情感分析方法...")
+
+        # 创建模拟评论数据
+        positive_words = ['好看', '精彩', '优秀', '推荐', '喜欢', '不错', '赞', '棒', '值得', '经典']
+        negative_words = ['无聊', '差劲', '浪费时间', '失望', '糟糕', '烂片', '不好', '难看', '后悔', '垃圾']
+        neutral_words = ['一般', '还行', '普通', '平常', '没什么特别', '中规中矩', '可以', '凑合', '看看']
+
+        # 生成模拟评论
+        np.random.seed(42)
+        simulated_comments = []
+        sentiments = []
+
+        for i in range(len(comments_sample)):
+            sentiment_type = np.random.choice(['positive', 'negative', 'neutral'], p=[0.6, 0.2, 0.2])
+
+            if sentiment_type == 'positive':
+                words = np.random.choice(positive_words, size=np.random.randint(2, 5))
+                comment = f"这部电影{' '.join(words)}！"
+                sentiment = 1  # 正面
+            elif sentiment_type == 'negative':
+                words = np.random.choice(negative_words, size=np.random.randint(2, 4))
+                comment = f"感觉{' '.join(words)}，"
+                sentiment = -1  # 负面
+            else:
+                words = np.random.choice(neutral_words, size=np.random.randint(1, 3))
+                comment = f"电影{' '.join(words)}。"
+                sentiment = 0  # 中性
+
+            simulated_comments.append(comment)
+            sentiments.append(sentiment)
+
+        comments_sample['模拟评论'] = simulated_comments
+        comments_sample['真实情感'] = sentiments  # 用于验证我们的分析
+        text_column = '模拟评论'
+
+    print(f"📝 使用评论列: {text_column}")
+    print(f"📊 总评论数: {len(comments_sample)}")
+
+
+    # 简单的基于关键词的情感分析
+    def simple_sentiment_analysis(text):
+        """简单的中文情感分析函数"""
+        if pd.isna(text):
+            return 0
+
+        text = str(text).lower()
+
+        # 定义情感词典
+        positive_keywords = ['好', '棒', '赞', '优秀', '精彩', '喜欢', '推荐', '值得', '经典', '不错', '满意', '惊喜']
+        negative_keywords = ['差', '烂', '无聊', '失望', '糟糕', '浪费', '后悔', '难看', '垃圾', '不好', '讨厌', '恶心']
+
+        positive_score = sum(1 for word in positive_keywords if word in text)
+        negative_score = sum(1 for word in negative_keywords if word in text)
+
+        # 计算情感分数
+        if positive_score > negative_score:
+            return 1  # 正面
+        elif negative_score > positive_score:
+            return -1  # 负面
+        else:
+            return 0  # 中性
+
+
+    # 对所有评论进行情感分析
+    print("\n🔍 正在进行情感分析...")
+    comments_sample['情感分析'] = comments_sample[text_column].apply(simple_sentiment_analysis)
+
+    # 统计情感分布
+    sentiment_counts = comments_sample['情感分析'].value_counts()
+    sentiment_labels = {1: '正面😊', -1: '负面😤', 0: '中性😐'}
+
+    print(f"\n📊 情感分析结果:")
+    total = len(comments_sample)
+    for sentiment, count in sentiment_counts.items():
+        label = sentiment_labels.get(sentiment, '未知')
+        percentage = (count / total) * 100
+        print(f"• {label}: {count} 条 ({percentage:.1f}%)")
+
+    # 可视化情感分析结果
+    plt.figure(figsize=(15, 10))
+
+    # 子图1：情感分布饼图
+    plt.subplot(2, 3, 1)
+    colors = ['#ff9999', '#66b3ff', '#99ff99']  # 红色(负面)、蓝色(中性)、绿色(正面)
+    labels = [sentiment_labels[s] for s in sentiment_counts.index]
+    plt.pie(sentiment_counts.values, labels=labels, colors=colors[:len(sentiment_counts)], autopct='%1.1f%%',
+            startangle=90)
+    plt.title('🥧 评论情感分布', fontsize=12, fontweight='bold')
+
+    # 子图2：情感分布柱状图
+    plt.subplot(2, 3, 2)
+    bars = plt.bar(labels, sentiment_counts.values, color=colors[:len(sentiment_counts)])
+    plt.title('📊 情感分布柱状图', fontsize=12, fontweight='bold')
+    plt.ylabel('评论数量')
+
+    # 添加数值标签
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2., height + 10,
+                 f'{int(height)}', ha='center', va='bottom', fontsize=10)
+
+    # 子图3：情感分数分布直方图
+    plt.subplot(2, 3, 3)
+    plt.hist(comments_sample['情感分析'], bins=[-1.5, -0.5, 0.5, 1.5],
+             color=colors[0], alpha=0.7, edgecolor='black')  # 修复：只使用一种颜色
+    plt.title('📈 情感分数分布', fontsize=12, fontweight='bold')
+    plt.xlabel('情感分数')
+    plt.ylabel('评论数量')
+    plt.xticks([-1, 0, 1], ['负面', '中性', '正面'])
+
+    # 子图4：评论长度与情感的关系
+    plt.subplot(2, 3, 4)
+    comments_sample['text_length'] = comments_sample[text_column].str.len()
+    sentiment_length = comments_sample.groupby('情感分析')['text_length'].mean()
+    colors_dict = {-1: colors[0], 0: colors[1], 1: colors[2]}
+    colors_list = [colors_dict[s] for s in sentiment_length.index]
+
+    bars = plt.bar([sentiment_labels[s] for s in sentiment_length.index],
+                   sentiment_length.values, color=colors_list, alpha=0.7)
+    plt.title('📏 情感与评论长度关系', fontsize=12, fontweight='bold')
+    plt.ylabel('平均评论长度')
+
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2., height + 1,
+                 f'{height:.0f}', ha='center', va='bottom', fontsize=10)
+
+    # 子图5：情感趋势（如果有时间数据）
+    plt.subplot(2, 3, 5)
+    # 创建模拟时间趋势
+    time_periods = ['1月', '2月', '3月', '4月', '5月', '6月']
+    positive_trend = [0.6, 0.65, 0.58, 0.62, 0.68, 0.70]
+    negative_trend = [0.2, 0.18, 0.22, 0.20, 0.17, 0.15]
+
+    plt.plot(time_periods, positive_trend, 'o-', color=colors[2], label='正面情感', linewidth=2)
+    plt.plot(time_periods, negative_trend, 'o-', color=colors[0], label='负面情感', linewidth=2)
+    plt.title('📈 情感趋势变化', fontsize=12, fontweight='bold')
+    plt.ylabel('情感比例')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+
+    # 子图6：情感强度分析
+    plt.subplot(2, 3, 6)
+    # 计算情感强度（正面和负面评论的比例）
+    sentiment_ratio = sentiment_counts.get(1, 0) / (sentiment_counts.get(-1, 0) + 1)  # 避免除零
+
+    # 创建情感强度计量表
+    if sentiment_ratio > 2:
+        color = colors[2]  # 绿色
+        intensity = '非常正面'
+    elif sentiment_ratio > 1.5:
+        color = colors[2]  # 浅绿色
+        intensity = '比较正面'
+    elif sentiment_ratio > 0.8:
+        color = colors[1]  # 灰色
+        intensity = '相对平衡'
+    else:
+        color = colors[0]  # 红色
+        intensity = '偏向负面'
+
+    plt.bar(['情感强度'], [sentiment_ratio], color=color, alpha=0.7)
+    plt.title('🎯 整体情感强度', fontsize=12, fontweight='bold')
+    plt.ylabel('正负面比例')
+    plt.text(0, sentiment_ratio + 0.1, f'{intensity}\n({sentiment_ratio:.1f})',
+             ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+    plt.tight_layout()
+    plt.show()
+
+    # 🎯 情感分析洞察
+    print(f"\n🎯 情感分析洞察:")
+
+    # 计算情感指标
+    total_comments = len(comments_sample)
+    positive_pct = (sentiment_counts.get(1, 0) / total_comments) * 100
+    negative_pct = (sentiment_counts.get(-1, 0) / total_comments) * 100
+    neutral_pct = (sentiment_counts.get(0, 0) / total_comments) * 100
+
+    print(f"• 😊 正面情感占比: {positive_pct:.1f}%")
+    print(f"• 😤 负面情感占比: {negative_pct:.1f}%")
+    print(f"• 😐 中性情感占比: {neutral_pct:.1f}%")
+
+    # 判断整体情感倾向
+    if positive_pct > 50:
+        overall_sentiment = "观众普遍喜爱 👍"
+    elif negative_pct > 30:
+        overall_sentiment = "存在较多不满 👎"
+    else:
+        overall_sentiment = "情感相对平衡 ⚖️"
+
+    print(f"• 🎬 整体评价: {overall_sentiment}")
+
+    # 情感分析建议
+    print(f"\n💡 分析建议:")
+    if positive_pct > 60:
+        print("• 电影整体受到好评，可以重点宣传正面口碑")
+    if negative_pct > 25:
+        print("• 负面评论较多，需要关注改进点")
+    if neutral_pct > 40:
+        print("• 中性评论占比高，可能缺乏亮点或争议点")
+
+else:
+    print("❌ 评论数据未成功加载，无法进行情感分析")
+    print("💡 实际使用时，请确保有评论文本数据")
+
+
+# 🔍 案例2.2：关键词分析 - "观众在讨论什么？"
+print("\n" + "=" * 60)
+print("🔍 评论关键词分析")
+print("=" * 60)
+
+if comments_sample is not None:
+    print("💡 就像听八卦一样，我们来看看观众最爱聊什么话题！")
+
+    # 使用jieba进行分词
+    import jieba
+    import jieba.analyse
+
+    # 合并所有评论文本
+    all_comments = ' '.join(comments_sample['CONTENT'].astype(str))  # 修改为'丰富评论'列
+
+    # 提取关键词(TF-IDF)
+    keywords = jieba.analyse.extract_tags(all_comments, topK=20, withWeight=True)
+
+    # 打印关键词统计
+    print("\n📊 关键词统计结果:")
+    print(f"• 提取出 {len(keywords)} 个关键词")
+
+    # 显示TOP关键词
+    print(f"\n🏆 TOP 关键词:")
+    for word, weight in keywords:
+        print(f"• {word}: {weight:.4f}")
+
+    # 可视化关键词权重
+    plt.figure(figsize=(12, 6))
+
+    words = [item[0] for item in keywords]
+    weights = [item[1] for item in keywords]
+
+    plt.bar(range(len(words)), weights)
+    plt.xticks(range(len(words)), words, rotation=45)
+    plt.title("关键词权重分布")
+    plt.xlabel("关键词")
+    plt.ylabel("权重")
+
+    plt.tight_layout()
+    plt.show()
+
+    # 分析洞察
+    print("\n💡 关键词分析洞察:")
+    print(f"• 最重要的关键词是: {words[0]}")
+    print(f"• 观众讨论最多的话题集中在: {', '.join(words[:3])}")
+
+else:
+    print("❌ 评论数据未成功加载，无法进行关键词分析")
+    print("💡 实际使用时，可以使用jieba等中文分词工具进行更精确的关键词提取")
+
+
+# 🔗 案例3.1：评论长度分析 - "评论长度的分布特征"
+print("\n" + "=" * 60)
+print("🔗 评论长度分析")
+print("=" * 60)
+
+if comments_sample is not None:
+    print("💡 让我们来分析一下评论的长度分布特征！")
+
+    # 计算评论的长度
+    comments_sample['评论长度'] = comments_sample['CONTENT'].str.len()
+
+    print(f"\n📊 评论长度基本统计:")
+    length_stats = comments_sample['评论长度'].describe()
+    print(f"• 平均长度: {length_stats['mean']:.1f} 个字符")
+    print(f"• 最短评论: {length_stats['min']:.0f} 个字符")
+    print(f"• 最长评论: {length_stats['max']:.0f} 个字符")
+    print(f"• 中位数长度: {length_stats['50%']:.1f} 个字符")
+
+    # 可视化长度分布
+    plt.figure(figsize=(16, 12))
+
+    # 子图1：直方图显示长度分布
+    plt.subplot(2, 2, 1)
+    plt.hist(comments_sample['评论长度'], bins=30, color='blue', alpha=0.7)
+    plt.title('📊 评论长度分布直方图', fontsize=12, fontweight='bold')
+    plt.xlabel('评论长度（字符数）')
+    plt.ylabel('评论数量')
+    plt.grid(True, alpha=0.3)
+
+    # 子图2：箱线图显示长度分布
+    plt.subplot(2, 2, 2)
+    plt.boxplot(comments_sample['评论长度'])
+    plt.title('📦 评论长度箱线图', fontsize=12, fontweight='bold')
+    plt.ylabel('评论长度（字符数）')
+    plt.grid(True, alpha=0.3)
+
+    # 子图3：长度区间分析
+    plt.subplot(2, 2, 3)
+    # 将评论长度分为几个区间
+    length_bins = [0, 10, 20, 30, 50, float('inf')]
+    length_labels = ['很短(≤10)', '短(11-20)', '中(21-30)', '长(31-50)', '很长(>50)']
+    comments_sample['长度区间'] = pd.cut(comments_sample['评论长度'], bins=length_bins, labels=length_labels)
+
+    # 统计各长度区间的分布
+    length_dist = comments_sample['长度区间'].value_counts()
+    length_dist.plot(kind='bar', color='skyblue', alpha=0.8)
+    plt.title('📊 评论长度区间分布', fontsize=12, fontweight='bold')
+    plt.xlabel('评论长度区间')
+    plt.ylabel('评论数量')
+    plt.xticks(rotation=45)
+    plt.grid(True, alpha=0.3)
+
+    # 子图4：长度随时间的变化趋势
+    plt.subplot(2, 2, 4)
+    if 'TIME' in comments_sample.columns:
+        try:
+            # 尝试多种日期格式解析
+            comments_sample['日期'] = pd.to_datetime(comments_sample['TIME'], format='mixed', errors='coerce')
+            # 过滤掉无效日期
+            valid_dates = comments_sample.dropna(subset=['日期'])
+            if not valid_dates.empty:
+                daily_length = valid_dates.groupby(valid_dates['日期'].dt.date)['评论长度'].mean()
+                plt.plot(daily_length.index, daily_length.values, color='green')
+                plt.title('📈 评论长度时间趋势', fontsize=12, fontweight='bold')
+                plt.xlabel('日期')
+                plt.ylabel('平均评论长度')
+                plt.xticks(rotation=45)
+                plt.grid(True, alpha=0.3)
+            else:
+                plt.text(0.5, 0.5, '无有效时间数据', ha='center', va='center')
+                plt.title('📈 评论长度时间趋势', fontsize=12, fontweight='bold')
+        except Exception as e:
+            plt.text(0.5, 0.5, f'时间数据处理异常\n{str(e)}', ha='center', va='center')
+            plt.title('📈 评论长度时间趋势', fontsize=12, fontweight='bold')
+    else:
+        plt.text(0.5, 0.5, '无时间数据可显示', ha='center', va='center')
+        plt.title('📈 评论长度时间趋势', fontsize=12, fontweight='bold')
+
+    plt.tight_layout()
+    plt.show()
+
+    # 🎯 评论长度分析洞察
+    print(f"\n🎯 评论长度分析洞察:")
+
+    # 计算长度区间分布
+    length_dist_pct = length_dist / len(comments_sample) * 100
+
+    print("• 📏 长度区间分布:")
+    for interval, pct in length_dist_pct.items():
+        print(f"  - {interval}: {pct:.1f}%")
+
+    # 找出最常见的长度区间
+    most_common_length = length_dist_pct.idxmax()
+    print(f"\n• 🏆 最常见的评论长度区间: {most_common_length} ({length_dist_pct[most_common_length]:.1f}%)")
+
+    # 计算超长评论比例
+    long_comments_pct = (comments_sample['评论长度'] > 50).mean() * 100
+    print(f"• 📝 超长评论(>50字符)比例: {long_comments_pct:.1f}%")
+
+    print(f"\n💡 实用建议:")
+    print("• 根据评论长度分布特征，可以优化评论展示和筛选策略")
+    print("• 可以考虑为不同长度的评论设计不同的展示模板")
+    print("• 建议根据评论长度特征设计合理的字数限制和提示")
+
+else:
+    print("❌ 评论数据未成功加载，无法进行评论长度分析")
+    print("💡 需要包含评论文本数据才能进行分析")
