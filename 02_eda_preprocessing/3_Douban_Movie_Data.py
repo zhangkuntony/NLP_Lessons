@@ -577,7 +577,6 @@ else:
 
 # 导入词云相关库
 from wordcloud import WordCloud
-import jieba
 import jieba.analyse
 from collections import Counter
 import matplotlib.pyplot as plt
@@ -655,7 +654,6 @@ print("🛠️ 文本预处理函数定义完成！")
 # 🔧 中文字体检测和设置工具
 import os
 import platform
-from pathlib import Path
 
 def find_chinese_font():
     """
@@ -750,7 +748,8 @@ def get_system_chinese_fonts():
                 chinese_fonts.append(font_path)
 
         return chinese_fonts[:5]  # 返回前5个
-    except:
+    except Exception as error:
+        print("Error: ", error)
         return []
 
 
