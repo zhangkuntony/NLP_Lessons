@@ -235,8 +235,8 @@ print("🎉 工具箱准备完毕！让我们开始文本魔法之旅吧！")
 #
 # print("TF-IDF Representation for sentence 'the cat sat in the hat' :")
 # print(tfidf.transform(["the cat sat in the hat"]).toarray())
-
-
+#
+#
 # 第五关：Word2vec
 
 # 创建一些示例数据来训练Word2Vec模型
@@ -265,94 +265,164 @@ Word2VecModel = Word2Vec(
     workers=4,          # 并行数
     sg=1                # 使用Skip-gram算法
 )
+#
+# print(f"✅ 模型训练完成！词汇表大小: {len(Word2VecModel.wv)}")
+#
+# # 方法1: 使用Plotly进行交互式可视化
+# import plotly.graph_objects as go
+# import plotly.express as px
+# from plotly.subplots import make_subplots
+# from sklearn.manifold import TSNE
+#
+# plotly_available = True
+#
+# if plotly_available:
+#     def plot_embeddings_plotly(embeddings, words, title="交互式词嵌入可视化"):
+#         """使用Plotly创建交互式的embedding可视化"""
+#
+#         # 将列表转换为numpy数组
+#         embeddings = np.array(embeddings)
+#         print(f"词向量矩阵形状: {embeddings.shape}")
+#
+#         # 调整perplexity参数，确保小于样本数
+#         perplexity = min(15, embeddings.shape[0] - 1)
+#         if perplexity < 1:
+#             perplexity = 1
+#
+#         # 使用t-SNE降为到2D
+#         tsne_2d = TSNE(n_components=2, random_state=42, perplexity=perplexity)
+#         embeddings_2d = tsne_2d.fit_transform(embeddings)
+#
+#         # 创建DataFrame用于Plotly
+#         df = pd.DataFrame({
+#             'x': embeddings_2d[:, 0],
+#             'y': embeddings_2d[:, 1],
+#             'word': words,
+#             'cluster': ['cluster_' + str(i // 30) for i in range(len(words))]
+#         })
+#
+#         # 创建交互式散点图
+#         fig = px.scatter(df, x="x", y="y", color="cluster",
+#                          hover_name='word', title=title,
+#                          width=800, height=600)
+#
+#         # 自定义悬停信息
+#         fig.update_traces(
+#             hovertemplate = '<b>%{hovertext}</b><br>' +
+#                           'X: %{x:.2f}<br>' +
+#                           'Y: %{y:.2f}<br>' +
+#                           '<extra></extra>',
+#             hovertext = df['word']
+#         )
+#
+#         # 美化图表
+#         fig.update_layout(
+#             title_font_size=16,
+#             xaxis_title='t-SNE 维度 1',
+#             yaxis_title='t-SNE 维度 2',
+#             showlegend=True,
+#             template="plotly_white"
+#         )
+#
+#         return fig
+#
+#     # 创建示例数据进行可视化
+#     if 'Word2VecModel' in locals():
+#         # 选择一些关键词
+#         sample_words = ["good", "bad", "great", "terrible", "computer", "science",
+#                        "python", "programming", "happy", "sad", "love", "hate"]
+#
+#         # 获取对应的词向量
+#         sample_embeddings = []
+#         available_words = []
+#
+#         for word in sample_words:
+#             try:
+#                 embedding = Word2VecModel.wv[word]
+#                 sample_embeddings.append(embedding)
+#                 available_words.append(word)
+#             except KeyError:
+#                 print(f"词 '{word}' 不在词汇表中")
+#
+#         if sample_embeddings:
+#             # 创建交互式可视化
+#             fig = plot_embeddings_plotly(sample_embeddings, available_words)
+#             fig.show()
+#         else:
+#             print("没有找到可用的词汇")
+#
+#     else:
+#         print("Word2VecModel 不可用，跳过Plotly可视化")
+# else:
+#     print("Plotly不可用，跳过交互式可视化")
 
-print(f"✅ 模型训练完成！词汇表大小: {len(Word2VecModel.wv)}")
+# 方法2：使用TensorBoard Embedding Projector (官方方法)
+import os
+import tensorflow as tf
+from tensorboard.plugins.projector import ProjectorConfig
 
-# 方法1: 使用Plotly进行交互式可视化
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-from sklearn.manifold import TSNE
 
-plotly_available = True
+def create_tensorboard_embeddings(embeddings, labels, log_dir="./embedding_logs"):
+    """
+    创建TensorBoard embedding projector可视化
 
-if plotly_available:
-    def plot_embeddings_plotly(embeddings, words, title="交互式词嵌入可视化"):
-        """使用Plotly创建交互式的embedding可视化"""
-        
-        # 将列表转换为numpy数组
-        embeddings = np.array(embeddings)
-        print(f"词向量矩阵形状: {embeddings.shape}")
-        
-        # 调整perplexity参数，确保小于样本数
-        perplexity = min(15, embeddings.shape[0] - 1)
-        if perplexity < 1:
-            perplexity = 1
-            
-        # 使用t-SNE降为到2D
-        tsne_2d = TSNE(n_components=2, random_state=42, perplexity=perplexity)
-        embeddings_2d = tsne_2d.fit_transform(embeddings)
+    Args:
+        embeddings: 词嵌入矩阵 (n_words, embedding_dim)
+        labels: 词汇列表
+        log_dir: 日志目录
+    """
 
-        # 创建DataFrame用于Plotly
-        df = pd.DataFrame({
-            'x': embeddings_2d[:, 0],
-            'y': embeddings_2d[:, 1],
-            'word': words,
-            'cluster': ['cluster_' + str(i // 30) for i in range(len(words))]
-        })
+    # 确保目录存在
+    os.makedirs(log_dir, exist_ok=True)
 
-        # 创建交互式散点图
-        fig = px.scatter(df, x="x", y="y", color="cluster",
-                         hover_name='word', title=title,
-                         width=800, height=600)
+    # 创建metadata文件（词汇标签）
+    metadata_path = os.path.join(log_dir, "metadata.tsv")
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        f.write("Word\n")  # 列标题
+        for label in labels:
+            f.write(f"{label}\n")
 
-        # 自定义悬停信息
-        fig.update_traces(
-            hovertemplate = '<b>%{hovertext}</b><br>' +
-                          'X: %{x:.2f}<br>' +
-                          'Y: %{y:.2f}<br>' +
-                          '<extra></extra>',
-            hovertext = df['word']
-        )
+    # 保存词向量到文件
+    embeddings_path = os.path.join(log_dir, "embeddings.tsv")
+    with open(embeddings_path, 'w', encoding='utf-8') as f:
+        for embedding in embeddings:
+            f.write("\t".join(map(str, embedding)) + "\n")
 
-        # 美化图表
-        fig.update_layout(
-            title_font_size=16,
-            xaxis_title='t-SNE 维度 1',
-            yaxis_title='t-SNE 维度 2',
-            showlegend=True,
-            template="plotly_white"
-        )
+    # 创建配置文件
+    config = {
+        "embeddings": [
+            {
+                "tensorName": "word_embeddings",
+                "tensorShape": list(embeddings.shape),
+                "tensorPath": embeddings_path,
+                "metadataPath": metadata_path
+            }
+        ]
+    }
 
-        return fig
+    import json
+    config_path = os.path.join(log_dir, "projector_config.json")
+    with open(config_path, 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2)
 
-    # 创建示例数据进行可视化
-    if 'Word2VecModel' in locals():
-        # 选择一些关键词
-        sample_words = ["good", "bad", "great", "terrible", "computer", "science",
-                       "python", "programming", "happy", "sad", "love", "hate"]
+    print(f"TensorBoard embedding 文件已保存到: {log_dir}")
+    print("运行以下命令启动TensorBoard:")
+    print(f"tensorboard --logdir={log_dir}")
+    print("然后在浏览器中打开 http://localhost:6006 查看交互式embedding可视化")
 
-        # 获取对应的词向量
-        sample_embeddings = []
-        available_words = []
 
-        for word in sample_words:
-            try:
-                embedding = Word2VecModel.wv[word]
-                sample_embeddings.append(embedding)
-                available_words.append(word)
-            except KeyError:
-                print(f"词 '{word}' 不在词汇表中")
+# 如果有词向量模型，创建TensorBoard可视化
+if 'Word2VecModel' in locals():
+    try:
+        # 选择前1000个最常用的词
+        vocab_size = min(1000, len(Word2VecModel.wv.key_to_index))
+        selected_words = list(Word2VecModel.wv.key_to_index.keys())[:vocab_size]
+        selected_embeddings = np.array([Word2VecModel.wv[word] for word in selected_words])
 
-        if sample_embeddings:
-            # 创建交互式可视化
-            fig = plot_embeddings_plotly(sample_embeddings, available_words)
-            fig.show()
-        else:
-            print("没有找到可用的词汇")
+        # 创建TensorBoard可视化
+        create_tensorboard_embeddings(selected_embeddings, selected_words)
 
-    else:
-        print("Word2VecModel 不可用，跳过Plotly可视化")
+    except Exception as e:
+        print(f"创建TensorBoard可视化时出错: {e}")
 else:
-    print("Plotly不可用，跳过交互式可视化")
-
+    print("Word2VecModel 不可用，跳过TensorBoard可视化")
