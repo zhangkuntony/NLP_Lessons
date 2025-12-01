@@ -211,3 +211,71 @@ class Vocabulary:
             word_lists: 词的列表的列表，如 [['今天', '天气'], ['明天', '下雨']]
         """
         print("📊 统计词频...")
+
+        # 统计所有词的频率
+        for words in word_lists:
+            self.word_counts.update(words)
+
+        print(f"📈 总共发现 {len(self.word_counts)} 个唯一词汇")
+        print(f"📋 最常见的10个词: {self.word_counts.most_common(10)}")
+
+        # 添加频率高于阈值的词
+        added_count = 0
+        for word, count in self.word_counts.items():
+            if count >= self.min_freq:
+                self._add_word(word)
+                added_count += 1
+
+        print(f"✅ 词汇表构建完成！")
+        print(f"📊 词汇表大小: {len(self.word2idx)} (其中 {added_count} 个常用词)")
+        print(f"🗑️  过滤掉 {len(self.word_counts) - added_count} 个低频词")
+
+    def word_to_idx(self, word):
+        """将词转换为索引"""
+        return self.word2idx.get(word, self.word2idx[self.UNK_TOKEN])
+
+    def idx_to_word(self, idx):
+        """将索引转换为词"""
+        return self.idx2word.get(idx, self.UNK_TOKEN)
+
+    def words_to_indices(self, words):
+        """将此列表转换为索引列表"""
+        return [self.word_to_idx(word) for word in words]
+
+    def indices_to_words(self, indices):
+        """将索引列表转换为词列表"""
+        return [self.idx_to_word(idx) for idx in indices]
+
+    def __len__(self):
+        return len(self.word2idx)
+
+# 创建一些示例数据来测试词汇表
+print("🧪 创建测试数据...")
+sample_word_lists = [
+    ['今天', '天气', '很', '好'],
+    ['明天', '可能', '会', '下雨'],
+    ['我', '喜欢', '晴天', '的', '时候'],
+    ['今天', '天气', '真', '好'],  # 重复的词用来测试词频
+    ['天气', '预报', '说', '明天', '晴天']
+]
+
+# 构建词汇表
+vocab = Vocabulary(min_freq=1)          # 设置最小频率为1， 这样所有词都会被保留
+vocab.build_vocab(sample_word_lists)
+
+# 测试词汇表功能
+print(f"\n🧪 测试词汇表功能:")
+test_words = ['今天', '天气', '未知词汇']
+for word in test_words:
+    idx = vocab.word_to_idx(word)
+    back_word = vocab.idx_to_word(idx)
+    print(f"  '{word}' → {idx} → '{back_word}'")
+
+# 测试句子转换
+test_sentence = ['今天', '天气', '很', '好']
+indices = vocab.words_to_indices(test_sentence)
+back_words = vocab.indices_to_words(indices)
+print(f"\n📝 句子转换测试:")
+print(f"  原句子: {test_sentence}")
+print(f"  索引序列: {indices}")
+print(f"  还原句子: {back_words}")
