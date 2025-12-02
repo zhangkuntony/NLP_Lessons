@@ -279,3 +279,237 @@ print(f"\n📝 句子转换测试:")
 print(f"  原句子: {test_sentence}")
 print(f"  索引序列: {indices}")
 print(f"  还原句子: {back_words}")
+
+
+# NNLM数据集类
+class NNLMDataset:
+    """NNLM数据集类"""
+
+    def __init__(self, word_lists, vocab, context_size=3):
+        """
+        Args:
+            word_lists: 词的列表的列表
+            vocab: 词汇表对象
+            context_size: 上下文窗口大小（用前几个词预测下一个词）
+        """
+        self.vocab = vocab
+        self.context_size = context_size
+        self.data = []
+
+        print(f"🔨 构建训练数据，上下文窗口大小: {context_size}")
+        self._build_data(word_lists)
+
+    def _build_data(self, word_lists):
+        """构建训练数据对"""
+        for words in word_lists:
+            # 将词转换为索引
+            indices = self.vocab.words_to_indices(words)
+
+            # 构建上下文-目标对
+            for i in range(len(indices) - self.context_size):
+                context = indices[i:i + self.context_size]          # 前n个词
+                target = indices[i + self.context_size]             # 下一个词
+                self.data.append((context, target))
+
+        print(f"✅ 数据构建完成！总共 {len(self.data)} 个训练样本")
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+    def get_batch(self, batch_size=32, shuffle=True):
+        """获取批次数据"""
+        if shuffle:
+            indices = np.random.choice(len(self.data), size=min(batch_size, len(self.data)), replace=False)
+        else:
+            indices = list(range(min(batch_size, len(self.data))))
+
+        contexts = []
+        targets = []
+
+        for idx in indices:
+            context, target = self.data[idx]
+            contexts.append(context)
+            targets.append(target)
+
+        return torch.tensor(contexts), torch.tensor(targets)
+
+# 创建数据集
+print("📦 创建NNLM数据集...")
+dataset = NNLMDataset(sample_word_lists, vocab, context_size=3)
+
+# 查看一些训练样本
+print(f"\n📋 训练样本示例:")
+# for i in range(min(5, len(dataset))):
+for i in range(len(dataset)):
+    context, target = dataset[i]
+    context_words = vocab.indices_to_words(context)
+    target_word = vocab.idx_to_word(target)
+    print(f"  样本 {i+1}: {context_words} → {target_word}")
+
+# 测试批次数据获取
+print(f"\n🎲 测试批次数据获取:")
+batch_contexts, batch_targets = dataset.get_batch(batch_size=3)
+print(f"  批次上下文形状: {batch_contexts.shape}")
+print(f"  批次目标形状: {batch_targets.shape}")
+print(f"  批次上下文内容: {batch_contexts}")
+print(f"  批次目标内容: {batch_targets}")
+
+# 转换回词汇查看
+print(f"\n📝 批次内容（词汇形式）:")
+for i in range(len(batch_contexts)):
+    context_words = vocab.indices_to_words(batch_contexts[i].tolist())
+    target_word = vocab.idx_to_word(batch_targets[i].item())
+    print(f"  批次样本 {i + 1}: {context_words} → {target_word}")
+
+
+# NNLM 模型实现
+class NNLM(nn.Module):
+    """神经网络语言模型"""
+
+    def __init__(self, vocab_size, context_size, embedding_dim=50, hidden_dim=128):
+        """
+        Args:
+            vocab_size: 词汇表大小
+            context_size: 上下文窗口大小
+            embedding_dim: 词嵌入维度
+            hidden_dim: 隐藏层维度
+        """
+        super(NNLM, self).__init__()
+
+        self.vocab_size = vocab_size
+        self.context_size = context_size
+        self.embedding_dim = embedding_dim
+        self.hidden_dim = hidden_dim
+
+        # 🧱 组件1：词嵌入层
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+
+        # 🧱 组件2：隐藏层
+        # 输入维度 = context_size * embedding_dim (拼接后的向量长度)
+        self.hidden = nn.Linear(context_size * embedding_dim, hidden_dim)
+
+        # 🧱 组件3：输出层
+        self.output = nn.Linear(hidden_dim, vocab_size)
+
+        # 激活函数
+        self.relu = nn.ReLU()
+        self.softmax = nn.LogSoftmax(dim=-1)            # 使用LogSoftmax与NLLLoss配合
+
+        # 初始化参数
+        self._init_weights()
+
+    def _init_weights(self):
+        """初始化模型参数"""
+        # 嵌入层初始化
+        nn.init.uniform_(self.embedding.weight, -0.1, 0.1)
+
+        # 线性层初始化
+        nn.init.xavier_uniform_(self.hidden.weight)
+        nn.init.zeros_(self.hidden.bias)
+        nn.init.xavier_uniform_(self.output.weight)
+        nn.init.zeros_(self.output.bias)
+
+    def forward(self, context):
+        """
+        前向传播
+
+        Args:
+            context: 上下文词索引，形状 [batch_size, context_size]
+
+        Returns:
+            输出概率分布，形状 [batch_size, vocab_size]
+        """
+        batch_size = context.size(0)
+
+        # 步骤1：词嵌入
+        # context: [batch_size, context_size] -> [batch_size, context_size, embedding_dim]
+        embedded = self.embedding(context)
+
+        # 步骤2：拼接
+        # [batch_size, context_size, embedding_dim] -> [batch_size, context_size * embedding_dim]
+        concatenated = embedded.view(batch_size, -1)
+
+        # 步骤3：隐藏层
+        # [batch_size, context_size * embedding_dim] -> [batch_size, hidden_dim]
+        hidden_out = self.relu(self.hidden(concatenated))
+
+        # 步骤4：输出层
+        # [batch_size, hidden_dim] -> [batch_size, vocab_size]
+        output = self.output(hidden_out)
+
+        # 步骤5：概率分布
+        log_probs = self.softmax(output)
+
+        return log_probs
+
+    def predict_next_word(self, context_words, vocab, top_k=5):
+        """
+        预测下一个词
+
+        Args:
+            context_words: 上下文词列表
+            vocab: 词汇表对象
+            top_k: 返回概率最高的前k个词
+
+        Returns:
+            [(word, probability), ...] 按概率降序排列
+        """
+        self.eval()             # 设置为评估模式
+
+        with torch.no_grad():
+            # 转换为索引
+            context_indices = vocab.words_to_indices(context_words)
+
+            # 确保上下文长度正确
+            if len(context_indices) != self.context_size:
+                raise ValueError(f"上下文长度应为 {self.context_size}, 但得到{len(context_indices)}")
+
+            # 转换为tensor并添加batch维度
+            context_tensor = torch.tensor([context_indices])
+
+            # 前向传播
+            log_probs = self.forward(context_tensor)
+            probs = torch.exp(log_probs)            # 从log概率转换为概率
+
+            # 获取top_k
+            top_probs, top_indices = torch.topk(probs[0], k=top_k)
+
+            # 转换回词汇
+            predictions = []
+            for prob, idx in zip(top_probs, top_indices):
+                word = vocab.idx_to_word(idx.item())
+                predictions.append((word, prob.item()))
+
+            return predictions
+
+# 创建模型
+print("🏗️  创建NNLM模型...")
+model = NNLM(
+    vocab_size=len(vocab),
+    context_size=3,
+    embedding_dim=20,       # 较小的维度用于演示
+    hidden_dim=50
+)
+
+print(f"📊 模型参数:")
+print(f"  词汇表大小: {len(vocab)}")
+print(f"  上下文窗口: 3")
+print(f"  嵌入维度: 20")
+print(f"  隐藏层维度: 50")
+
+# 统计参数数量
+total_params = sum(p.numel() for p in model.parameters())
+trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(f"  总参数数: {total_params:,}")
+print(f"  可训练参数数: {trainable_params:,}")
+
+# 测试模型前向传播
+print(f"\n🧪 测试模型前向传播...")
+test_context = torch.tensor([[2, 5, 8]])        # 批次大小为1的测试输入 (注意添加了方括号)
+test_output = model(test_context)
+print(f"  输入形状: {test_context.shape}")
+print(f"  输出形状: {test_output.shape}")
+print(f"  输出概率和: {torch.exp(test_output).sum().item():.6f} (应该接近1.0)")
