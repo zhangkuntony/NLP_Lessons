@@ -1,3 +1,7 @@
+# 解决OpenMP冲突问题
+import os
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
 # 导入必要的库
 import os
 import glob
@@ -513,3 +517,277 @@ test_output = model(test_context)
 print(f"  输入形状: {test_context.shape}")
 print(f"  输出形状: {test_output.shape}")
 print(f"  输出概率和: {torch.exp(test_output).sum().item():.6f} (应该接近1.0)")
+
+
+# 模型训练与优化
+def train_model(model, dataset, epochs=50, batch_size=8, learning_rate=0.01):
+    """
+    训练NNLM模型
+
+    Args:
+        model: NNLM模型
+        dataset: 训练数据集
+        epochs: 训练轮数
+        batch_size: 批次大小
+        learning_rate: 学习率
+    """
+
+    # 定义损失函数和优化器
+    criterion = nn.NLLLoss()            # 负对数似然损失
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+    # 记录训练历史
+    train_losses = []
+
+    print(f"🚀 开始训练模型...")
+    print(f"📊 训练配置:")
+    print(f"  训练轮数: {epochs}")
+    print(f"  批次大小: {batch_size}")
+    print(f"  学习率: {learning_rate}")
+    print(f"  训练样本数: {len(dataset)}")
+    print()
+
+    model.train()           # 设置为训练模式
+
+    for epoch in range(epochs):
+        epoch_loss = 0
+        num_batches = 0
+
+        # 计算这一轮需要多少个batch
+        total_batches = (len(dataset) + batch_size - 1) // batch_size
+
+        for batch_idx in range(total_batches):
+            # 获取一个批次的数据
+            contexts, targets = dataset.get_batch(batch_size, shuffle=True)
+
+            # 清零梯度
+            optimizer.zero_grad()
+
+            # 前向传播
+            log_probs = model(contexts)
+
+            # 计算损失
+            loss = criterion(log_probs, targets)
+
+            # 反向传播
+            loss.backward()
+
+            # 更新参数
+            optimizer.step()
+
+            # 记录损失
+            epoch_loss += loss.item()
+            num_batches += 1
+
+        # 计算平均损失
+        avg_loss = epoch_loss / num_batches
+        train_losses.append(avg_loss)
+
+        # 每10轮打印一次进度
+        if (epoch + 1) % 10 == 0 or epoch == 0:
+            print(f"轮次 {epoch + 1:3d}/{epochs}: 平均损失 = {avg_loss:.4f}")
+
+    print(f"\n✅ 训练完成！")
+    print(f"📉 最终损失: {train_losses[-1]:.4f}")
+
+    return train_losses
+
+# 开始训练
+print("🎯 开始训练NNLM模型...")
+train_losses = train_model(
+    model=model,
+    dataset=dataset,
+    epochs=100,
+    batch_size=4,  # 小批次，因为我们的数据比较少
+    learning_rate=0.01
+)
+
+# 绘制训练损失曲线
+print("\n📈 绘制训练损失曲线...")
+plt.figure(figsize=(10, 6))
+plt.plot(train_losses, 'b-', linewidth=2, label='训练损失')
+plt.title('NNLM训练损失曲线', fontsize=16, fontweight='bold')
+plt.xlabel('训练轮次', fontsize=12)
+plt.ylabel('损失值', fontsize=12)
+plt.grid(True, alpha=0.3)
+plt.legend(fontsize=12)
+plt.tight_layout()
+plt.show()
+
+# 分析训练结果
+print(f"\n📊 训练结果分析:")
+print(f"  初始损失: {train_losses[0]:.4f}")
+print(f"  最终损失: {train_losses[-1]:.4f}")
+print(f"  损失降低: {train_losses[0] - train_losses[-1]:.4f}")
+print(f"  相对改善: {((train_losses[0] - train_losses[-1]) / train_losses[0] * 100):.1f}%")
+
+# 检查是否过拟合
+if len(train_losses) > 20:
+    recent_trend = train_losses[-10:]
+    if all(recent_trend[i] <= recent_trend[i+1] for i in range(len(recent_trend)-1)):
+        print("⚠️  可能出现过拟合，考虑早停或调整学习率")
+    else:
+        print("✅ 训练过程正常，没有明显的过拟合")
+
+
+# 模型测试与应用
+# 测试模型预测能力
+print("🧪 测试训练好的NNLM模型...")
+print("="*50)
+
+# 测试用例：包括训练过的和未见过的上下文
+test_cases = [
+    # 训练数据中的例子
+    ['今天', '天气', '很'],
+    ['明天', '可能', '会'],
+    ['我', '喜欢', '晴天'],
+
+    # 新的组合（可能没有在训练数据中出现）
+    ['今天', '天气', '真'],
+    ['明天', '天气', '很'],
+]
+
+for i, context in enumerate(test_cases, 1):
+    print(f"\n📝 测试案例 {i}: {' '.join(context)}")
+
+    try:
+        # 获取预测结果
+        predictions = model.predict_next_word(context, vocab, top_k=3)
+
+        print(f"  🎯 预测结果 (Top 3):")
+        for j, (word, prob) in enumerate(predictions, i):
+            print(f"    {j}. {word} (概率: {prob:.3f})")
+
+    except Exception as e:
+        print(f"    ❌ 预测失败: {e}")
+
+print("\n" + "=" * 50)
+
+
+# 分析词嵌入
+print("\n🔍 分析学到的词嵌入...")
+
+def get_word_embedding(word, model, vocab):
+    """获取词的嵌入向量"""
+    word_idx = vocab.word_to_idx(word)
+    with torch.no_grad():
+        embedding = model.embedding(torch.tensor([word_idx]))
+    return embedding.numpy().flatten()
+
+def cosine_similarity(vec1, vec2):
+    """计算余弦相似度"""
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    return dot_product / (norm1 * norm2)
+
+# 选择一些词来分析它们的相似度
+words_to_analyze = ['今天', '明天', '天气', '很', '真', '好']
+available_words = [w for w in words_to_analyze if w in vocab.word2idx]
+
+if len(available_words) >= 2:
+    print(f"📊 词汇相似度分析 (基于学到的嵌入):")
+
+    # 计算词嵌入
+    embeddings = {}
+    for word in available_words:
+        embeddings[word] = get_word_embedding(word, model, vocab)
+
+    # 计算相似度矩阵
+    print(f"\n相似度矩阵:")
+    print(f"{'':>6}", end="")
+    for word in available_words:
+        print(f"{word:>8}", end="")
+    print()
+
+    for word1 in available_words:
+        print(f"{word1:>6}", end="")
+        for word2 in available_words:
+            if word1 == word2:
+                sim = 1.0
+            else:
+                sim = cosine_similarity(embeddings[word1], embeddings[word2])
+            print(f"{sim:>8.3f}", end="")
+        print()
+
+    # 找最相似的词对
+    print(f"\n🔗 最相似的词对:")
+    max_sim = -1
+    best_pair = None
+
+    for i, word1 in enumerate(available_words):
+        for j, word2 in enumerate(available_words[i+1:], i+i):
+            sim = cosine_similarity(embeddings[word1], embeddings[word2])
+            if sim > max_sim:
+                max_sim = sim
+                best_pair = (word1, word2)
+
+    if best_pair:
+        print(f"  '{best_pair[0]}' 和 '{best_pair[1]}' (相似度: {max_sim:.3f})")
+else:
+    print("⚠️ 可用词汇太少，无法进行相似度分析")
+
+# 简单的文本生成实验
+print(f"\n📝 文本生成实验...")
+
+def generate_text(model, vocab, start_context,max_length=10):
+    """
+    简单的文本生成
+
+    Args:
+        model: 训练好的模型
+        vocab: 词汇表
+        start_context: 起始上下文 (列表)
+        max_length: 最大生成长度
+
+    Returns:
+        生成的文本
+    """
+    model.eval()
+    generated = start_context.copy()
+    current_context = start_context.copy()
+
+    for _ in range(max_length):
+        if len(current_context) < model.context_size:
+            break
+
+        try:
+            # 预测下一个词
+            predictions = model.predict_next_word(current_context[-model.context_size:], vocab, top_k=3)
+
+            # 选择概率最高的词
+            next_word = predictions[0][0]
+
+            # 避免生成特殊标记
+            if next_word in ['<PAD>', '<UNK>']:
+                if len(predictions) > 1:
+                    next_word = predictions[1][0]
+                else:
+                    break
+
+            generated.append(next_word)
+            current_context.append(next_word)
+
+        except Exception as e:
+            print(f"生成过程中出错: {e}")
+            break
+
+    return generated
+
+# 尝试生成一些文本
+generation_starts = [
+    ['今天', '天气', '很'],
+    ['明天', '可能', '会']
+]
+
+for start in generation_starts:
+    if all(word in vocab.word2idx for word in start):
+        generated = generate_text(model, vocab, start, max_length=5)
+        print(f"  起始: {' '.join(start)}")
+        print(f"  生成: {' '.join(generated)}")
+        print()
+    else:
+        missing_words = [w for w in start if w not in vocab.word2idx]
+        print(f"  跳过 {start}: 包含未知词 {missing_words}")
+
+print("✅ 模型测试完成！")
