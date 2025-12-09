@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, Dataset
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from collections import defaultdict
+from collections import defaultdict, Counter
 import random
 import time
 
@@ -348,3 +348,516 @@ for i in range(min(2, len(sample_batch['src_text']))):
 # 4.2 编码器实现：理解输入序列
 # 词汇表构建过程可视化和数据流演示
 
+print("🔍 词汇表构建过程详解")
+print("=" * 60)
+
+# 演示词汇表构建过程
+print("\n📚 词汇表构建步骤演示:")
+sample_sentences = ["hello world", "good morning", "thank you very much"]
+
+demo_vocab = Vocabulary()
+print(f"1. 初始词汇表：{list(demo_vocab.idx2word.keys())}")
+
+for i, sentence in enumerate(sample_sentences):
+    print(f"\n2.{i+1} 添加句子：'{sentence}'")
+    demo_vocab.add_sentence(sentence)
+    print(f"     当前词汇表: {list(demo_vocab.word2idx.keys())}")
+    print(f"     词汇表大小: {len(demo_vocab)}")
+
+print(f"\n📊 最终词汇表统计:")
+print(f"   总词汇数: {len(demo_vocab)}")
+print(f"   特殊符号数: 4 (PAD, SOS, EOS, UNK)")
+print(f"   实际单词数: {len(demo_vocab) - 4}")
+
+# 演示编码和解码过程
+print(f"\n🔄 编码解码过程演示:")
+test_sentence = "hello world"
+print(f"原始句子: '{test_sentence}'")
+
+# 编码过程
+encoded = demo_vocab.encode_sentence(test_sentence)
+print(f"编码结果：{encoded}")
+print(f"对应词汇：{[demo_vocab.idx2word[idx] for idx in encoded]}")
+
+# 解码过程
+decoded = demo_vocab.decode_sentence(encoded)
+print(f"解码结果：{decoded}")
+
+# 展示实际数据集的词汇分布
+print(f"\n📈 数据集词汇分布分析:")
+en_words = []
+zh_chars = []
+
+for en_sent, zh_sent in raw_data:
+    en_words.extend(en_sent.split())
+    zh_chars.extend(list(zh_sent))
+
+en_word_freq = Counter(en_words)
+zh_char_freq = Counter(zh_chars)
+
+print(f"\n🇬🇧 英文词汇统计:")
+print(f"   总词汇数: {len(en_words)} (包含重复)")
+print(f"   唯一词汇数: {len(en_word_freq)}")
+print(f"   最高频词汇: {en_word_freq.most_common(5)}")
+
+print(f"\n🇨🇳 中文字符统计:")
+print(f"   总字符数: {len(zh_chars)} (包含重复)")
+print(f"   唯一字符数: {len(zh_char_freq)}")
+print(f"   最高频字符: {zh_char_freq.most_common(5)}")
+
+# 检查数据集的序列长度分布
+en_lengths = [len(sent.split()) for sent, _ in raw_data]
+zh_lengths = [len(sent) for _, sent in raw_data]
+
+print(f"\n📏 序列长度分析:")
+print(f"   英文句子长度: 最短 {min(en_lengths)}, 最长 {max(en_lengths)}, 平均 {sum(en_lengths)/len(en_lengths):.1f} 个单词")
+print(f"   中文句子长度: 最短 {min(zh_lengths)}, 最长 {max(zh_lengths)}, 平均 {sum(zh_lengths)/len(zh_lengths):.1f} 个字符")
+
+# 找出最长和最短的句子
+max_en_idx = en_lengths.index(max(en_lengths))
+min_en_idx = en_lengths.index(min(en_lengths))
+
+print(f"\n📝 长度示例:")
+print(f"   最长英文句子: '{raw_data[max_en_idx][0]}' (长度: {max(en_lengths)} 个单词)")
+print(f"   最短英文句子: '{raw_data[min_en_idx][0]}' (长度: {min(en_lengths)} 个单词)")
+
+max_zh_idx = zh_lengths.index(max(zh_lengths))
+min_zh_idx = zh_lengths.index(min(zh_lengths))
+
+print(f"   最长中文句子: '{raw_data[max_zh_idx][1]}' (长度: {max(zh_lengths)} 个字符)")
+print(f"   最短中文句子: '{raw_data[min_zh_idx][1]}' (长度: {min(zh_lengths)} 个字符)")
+
+
+# 编码器实现
+class Encoder(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, num_layers=1):
+        """
+        编码器
+        Args:
+            vocab_size: 词汇表大小
+            embedding_dim: 词嵌入维度
+            hidden_dim: LSTM隐藏层维度
+            num_layers: LSTM层数
+        """
+        super(Encoder, self).__init__()
+
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+
+        # 词嵌入层：将词索引转换为稠密向量
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+
+        # LSTM层：处理序列信息
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers,
+                            batch_first=True, bidirectional=False)
+
+    def forward(self, input_seq):
+        """
+        前向传播
+        Args:
+            input_seq: 输入序列 [batch_size, seq_len]
+        Returns:
+            outputs: 所有时间步的输出 [batch_size, seq_len, hidden_dim]
+            (hidden, cell): 最终的隐状态和细胞状态
+        """
+        # 1. 词嵌入：[batch_size, seq_len] -> [batch_size, seq_len, embedding_dim]
+        embedded = self.embedding(input_seq)
+
+        # 2. LSTM处理：获取所有时间步的输出和最终隐状态
+        outputs, (hidden, cell) = self.lstm(embedded)
+
+        # 返回最后一个时间步的隐状态作为句子表示
+        return outputs, (hidden, cell)
+
+# 测试编码器
+vocab_size = len(en_vocab)
+embedding_dim = 64
+hidden_dim = 128
+
+encoder = Encoder(vocab_size, embedding_dim, hidden_dim)
+
+print(f"🏗️ 编码器创建完成！")
+print(f"📏 参数数量: {sum(p.numel() for p in encoder.parameters()):,}")
+
+# 测试编码器
+test_input = sample_batch['src'][:2]            # 取前2个样本测试
+print(f"\n🧪 测试输入形状: {test_input.shape}")
+
+with torch.no_grad():
+    outputs, (hidden, cell) = encoder(test_input)
+    print(f"✅ 编码器输出形状: {outputs.shape}")
+    print(f"✅ 最终隐状态形状: {hidden.shape}")
+    print(f"✅ 最终细胞状态形状: {cell.shape}")
+
+
+# 数据流动可视化：从原始数据到模型输入
+print("🌊 数据流动全过程可视化")
+print("=" * 70)
+
+# 选择一个样本进行详细演示
+sample_en, sample_zh = raw_data[0]
+print(f"📝 演示样本: '{sample_en}' → '{sample_zh}'")
+print("-" * 50)
+
+# 步骤1: 原始数据
+print("🏁 步骤1: 原始数据")
+print(f"   英文: '{sample_en}'")
+print(f"   中文: '{sample_zh}'")
+
+# 步骤2: 词汇表编码
+print(f"\n🔤 步骤2: 词汇表编码")
+en_encoded = en_vocab.encode_sentence(sample_en, add_eos=True)
+zh_encoded_input =[zh_vocab.word2idx[zh_vocab.SOS_TOKEN]] + zh_vocab.encode_sentence(sample_zh, add_eos=False)
+zh_encoded_target = zh_vocab.encode_sentence(sample_zh, add_eos=True)
+
+print(f"    英文编码：{en_encoded}")
+print(f"      -> 对应词汇：{[en_vocab.idx2word[idx] for idx in en_encoded]}")
+print(f"    中文输入编码：{zh_encoded_input}")
+print(f"      -> 对应字符：{[zh_vocab.idx2word[idx] for idx in zh_encoded_input]}")
+print(f"    中文目标编码：{zh_encoded_target}")
+print(f"      -> 对应字符：{[zh_vocab.idx2word[idx] for idx in zh_encoded_target]}")
+
+# 步骤3: 批处理和填充
+print(f"\n📦 步骤3: 批处理和填充演示")
+# 模拟一个小批次
+mini_batch_indices = [0, 1, 2]
+mini_batch_data = [raw_data[i] for i in mini_batch_indices]
+
+print(f"    小批次原始数据：")
+for i, (en, zh) in enumerate(mini_batch_data):
+    print(f"    样本{i}: '{en}' -> ‘{zh}'")
+
+# 编码所有样本
+batch_en_encoded = []
+batch_zh_input_encoded = []
+batch_zh_target_encoded = []
+
+for en, zh in mini_batch_data:
+    batch_en_encoded.append(en_vocab.encode_sentence(en, add_eos=True))
+    batch_zh_input_encoded.append([zh_vocab.word2idx[zh_vocab.SOS_TOKEN]] + zh_vocab.encode_sentence(zh, add_eos=False))
+    batch_zh_target_encoded.append(zh_vocab.encode_sentence(zh, add_eos=True))
+
+print(f"\n    编码后长度：")
+for i, (en, zh_inp, zh_tgt) in enumerate(zip(batch_en_encoded, batch_zh_input_encoded, batch_zh_target_encoded)):
+    print(f"    样本{i}: en={len(en)}, zh_input={len(zh_inp)}, zh_target={len(zh_tgt)}")
+
+# 填充到相同长度
+batch_en_padded = pad_sequences(batch_en_encoded, en_vocab.word2idx[en_vocab.PAD_TOKEN])
+batch_zh_input_padded = pad_sequences(batch_zh_input_encoded, zh_vocab.word2idx[zh_vocab.PAD_TOKEN])
+batch_zh_target_padded = pad_sequences(batch_zh_target_encoded, zh_vocab.word2idx[zh_vocab.PAD_TOKEN])
+
+print(f"\n    填充后：")
+for i, (en, zh_inp, zh_tgt) in enumerate(zip(batch_en_padded, batch_zh_input_padded, batch_zh_target_padded)):
+    print(f"    样本{i}: {en}")
+    print(f"      -> {[en_vocab.idx2word[idx] for idx in en]}")
+    print(f"    样本{i}: {zh_inp}")
+    print(f"      -> {[zh_vocab.idx2word[idx] for idx in zh_inp]}")
+    print(f"    样本{i}: {zh_tgt}")
+    print(f"      -> {[zh_vocab.idx2word[idx] for idx in zh_tgt]}")
+
+# 步骤4: 转换为张量
+print(f"\n🔢 步骤4: 转换为PyTorch张量")
+batch_en_tensor = torch.tensor(batch_en_padded, dtype=torch.long)
+batch_zh_input_tensor = torch.tensor(batch_zh_input_padded, dtype=torch.long)
+batch_zh_target_tensor = torch.tensor(batch_zh_target_padded, dtype=torch.long)
+
+print(f"   英文张量形状: {batch_en_tensor.shape}")
+print(f"   中文输入张量形状: {batch_zh_input_tensor.shape}")
+print(f"   中文目标张量形状: {batch_zh_target_tensor.shape}")
+
+print(f"\n  第一个样本的张量值：")
+print(f"    英文：{batch_en_tensor[0]}")
+print(f"    中文输入：{batch_zh_input_tensor[0]}")
+print(f"    中文目标：{batch_zh_target_tensor[0]}")
+
+# 步骤5: 损失计算的解释
+print(f"\n💡 步骤5: 训练时的损失计算")
+print(f"   模型预测: 基于英文和中文输入，预测中文的下一个字符")
+print(f"   损失计算: 预测结果与中文目标比较")
+print(f"   💡 为什么中文输入和目标不同？")
+print(f"      - 输入: [SOS, 你] → 模型看到开始标记和前面的字符")
+print(f"      - 目标: [你, EOS] → 模型应该预测的下一个字符")
+print(f"      - 这样在每个时间步，模型都知道应该预测什么！")
+
+print(f"\n🎯 数据流动总结:")
+print(f"   原始文本 → 分词 → 编码 → 填充 → 张量 → 模型 → 损失 → 梯度 → 更新")
+
+
+# 4.3 解码器实现：生成输出序列
+# 解码器实现
+class Decoder(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, num_layers=1):
+        """
+        解码器
+        Args:
+            vocab_size: 目标语言词汇表大小
+            embedding_dim: 词嵌入维度
+            hidden_dim: LSTM隐藏层维度
+            num_layers: LSTM层数
+        """
+        super(Decoder, self).__init__()
+
+        self.vocab_size = vocab_size
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+
+        # 词嵌入层
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+
+        # LSTM层：用于生成序列
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers,
+                            batch_first=True, bidirectional=False)
+
+        # 输出层：将隐状态映射到词汇表大小
+        self.output_projection = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, input_seq, hidden_state):
+        """
+        前向传播
+        Args:
+            input_seq: 输入序列 [batch_size, seq_len]
+            hidden_state: 编码器传来的隐状态 (hidden, cell)
+        Returns:
+            outputs: 输出序列的词汇分布 [batch_size, seq_len, vocab_size]
+            hidden_state: 更新后的隐状态
+        """
+        # 1. 词嵌入
+        embedded = self.embedding(input_seq)
+
+        # 2. LSTM处理
+        outputs, hidden_state = self.lstm(embedded, hidden_state)
+
+        # 3. 投影到词汇表
+        outputs = self.output_projection(outputs)
+
+        return outputs, hidden_state
+
+    def generate(self, hidden_state, max_length=20, start_token=1, end_token=2):
+        """
+        生成序列（推理时使用）
+        Args:
+            hidden_state: 编码器的隐状态
+            max_length: 生成的最大长度
+            start_token: 开始标记的索引
+            end_token: 结束标记的索引
+        Returns:
+            generated_sequence: 生成的词汇索引序列
+        """
+        batch_size = hidden_state[0].size(1)
+
+        # 初始化输入为开始标记
+        current_input = torch.tensor([[start_token]] * batch_size)
+
+        generated_sequence = []
+
+        for _ in range(max_length):
+            # 获取当前次的输出
+            output, hidden_state = self.forward(current_input, hidden_state)
+
+            # 贪心选择概率最高的词
+            predicted_word = output.argmax(dim=-1)
+            generated_sequence.append(predicted_word.item())
+
+            # 如果生成了结束标记，停止生成
+            if predicted_word.item() == end_token:
+                break
+
+            # 更新下一步的输入
+            current_input = predicted_word
+
+        return generated_sequence
+
+# 创建解码器
+zh_vocab_size = len(zh_vocab)
+decoder = Decoder(zh_vocab_size, embedding_dim, hidden_dim)
+
+print(f"🏗️ 解码器创建完成！")
+print(f"📏 参数数量: {sum(p.numel() for p in decoder.parameters()):,}")
+
+# 测试解码器
+test_tgt_input = sample_batch['tgt_input'][:2]
+print(f"\n🧪 测试目标输入形状: {test_tgt_input.shape}")
+
+with torch.no_grad():
+    # 使用编码器的隐状态作为解码器的初始状态
+    decoder_outputs, _ = decoder(test_tgt_input, (hidden, cell))
+    print(f"✅ 解码器输出形状: {decoder_outputs.shape}")
+    print(f"✅ 输出词汇分布维度: {decoder_outputs.size(-1)} (应该等于中文词汇表大小 {zh_vocab_size})")
+
+
+# 模型参数和计算复杂度分析
+print("📊 模型参数分析")
+print("=" * 50)
+
+# 显示编码器参数详情
+print(f"\n🔍 编码器参数详细分析:")
+total_params = 0
+for name, param in encoder.named_parameters():
+    param_count = param.numel()
+    total_params += param_count
+    print(f"    {name:25s}: {param.shape} -> {param_count:,} 参数")
+
+print(f"    {'总计':25s}: {total_params:,} 参数")
+
+# 计算参数组成
+vocab_size = len(en_vocab)
+embedding_dim = 64
+hidden_dim = 128
+
+print(f"\n🧮 参数计算验证:")
+embedding_params = vocab_size * embedding_dim
+lstm_params = 4 * (embedding_dim * hidden_dim + hidden_dim * hidden_dim + hidden_dim)           # LSTM公式
+print(f"  词嵌入层：{vocab_size} × {embedding_dim} = {embedding_params:,}")
+print(f"  LSTM层：4 × ({embedding_dim} × {hidden_dim} + {hidden_dim} × {hidden_dim} + {hidden_dim} = {lstm_params:,}")
+print(f"  总计: {embedding_params + lstm_params:,}")
+
+# 内存占用估计
+print(f"\n💾 内存占用估计:")
+bytes_per_param = 4         # float32
+model_memory_mb = total_params * bytes_per_param / (1024**2)
+print(f"  模型参数: {model_memory_mb:.2f} MB")
+
+# 计算复杂度分析
+print(f"\n⚡ 时间复杂度分析:")
+print(f"  编码器前向传播: O(seq_len × embedding_dim × hidden_dim)")
+print(f"  其中 seq_len ≈ {max([len(sent.split()) for sent, _ in raw_data])}")
+print(f"      embedding_dim = {embedding_dim}")
+print(f"      hidden_dim = {hidden_dim}")
+
+# 实际测试编码器速度
+import time
+test_times = []
+test_input = sample_batch['src'][:2]
+
+print(f"\n🕒 实际性能测试:")
+for i in range(5):
+    start_time = time.time()
+    with torch.no_grad():
+        outputs, (hidden, cell) = encoder(test_input)
+    end_time = time.time()
+    test_times.append(end_time - start_time)
+
+avg_time = sum(test_times) / len(test_times)
+print(f"  编码器前向传播时间: {avg_time*1000:.2f} ms (平均)")
+print(f"  处理速度: {test_input.shape[0]/avg_time:.1f} 句子/秒")
+
+
+# 4.4 完整的Seq2Seq模型: 将编码器和解码器组合
+# 完整的Seq2Seq模型
+class Seq2Seq(nn.Module):
+    def __init__(self, encoder, decoder, device):
+        """
+        Seq2Seq模型
+        Args:
+            encoder: 编码器
+            decoder: 解码器
+            device: 计算设备 (cpu/gpu)
+        """
+        super(Seq2Seq, self).__init__()
+
+        self.encoder = encoder
+        self.decoder = decoder
+        self.device = device
+
+    def forward(self, src_seq, tgt_seq, teacher_forcing_ratio=1):
+        """
+        训练时的前向传播
+        Args:
+            src_seq: 源序列 [batch_size, src_len]
+            tgt_seq: 目标序列 [batch_size, tgt_len]
+            teacher_forcing_ratio: 教师强制比例
+        Returns:
+            outputs: 解码器输出 [batch_size, tgt_len, vocab_size]
+        """
+        batch_size = src_seq.size(0)
+        tgt_len = tgt_seq.size(1)
+        vocab_size = self.decoder.vocab_size
+
+        # 存储解码器的所有输出
+        outputs = torch.zeros(batch_size, tgt_len, vocab_size).to(self.device)
+
+        # 1. 编码阶段: 获取源序列的表示
+        _, hidden_state = self.encoder(src_seq)
+
+        # 2. 解码阶段: 逐步生成目标序列
+        # 解码器的第一个输入是SOS标记
+        decoder_input = tgt_seq[:, :1]          # 第一个token (SOS)
+
+        # 从第0个时间步开始训练，而不是从第1个时间步
+        for t in range(tgt_len):
+            # 解码器前向传播
+            output, hidden_state = self.decoder(decoder_input, hidden_state)
+            outputs[:, t:t+1, :] = output
+
+            # 教师强制：决定下一个输入是真实标签还是模型预测
+            use_teacher_forcing = random.random() < teacher_forcing_ratio
+
+            if use_teacher_forcing and t < tgt_len - 1:
+                # 使用真实的下一个词作为输入（但不要超出序列长度）
+                decoder_input = tgt_seq[:, t+1:t+2]
+            else:
+                # 使用模型预测的词作为输入
+                decoder_input = output.argmax(dim=-1)
+
+        return outputs
+
+    def translate(self, src_seq, max_length=20):
+        """
+        推理时的翻译功能
+        Args:
+            src_seq: 源序列 [1, src_len]
+            max_length: 生成的最大长度
+        Returns:
+            generated_indices: 生成的词汇索引列表
+        """
+        self.eval()         # 设置为评估模式
+
+        with torch.no_grad():
+            # 编码源序列
+            _, hidden_state = self.encoder(src_seq)
+
+            # 生成目标序列
+            generated_indices = []
+            decoder_input = torch.tensor([[zh_vocab.word2idx[zh_vocab.SOS_TOKEN]]]).to(self.device)
+
+            for _ in range(max_length):
+                output, hidden_state = self.decoder(decoder_input, hidden_state)
+                predicted_id = output.argmax(dim=-1).item()
+
+                generated_indices.append(predicted_id)
+
+                # 如果预测到结束标记，停止生成
+                if predicted_id == zh_vocab.word2idx[zh_vocab.EOS_TOKEN]:
+                    break
+
+                # 下一步的输入是当前预测的词
+                decoder_input = torch.tensor([[predicted_id]]).to(self.device)
+
+        return generated_indices
+
+# 创建设备对象
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# 创建完整的Seq2Seq模型
+model = Seq2Seq(encoder, decoder, device).to(device)
+
+print(f"🎯 Seq2Seq模型创建完成！")
+print(f"📱 运行设备: {device}")
+print(f"📏 总参数数量: {sum(p.numel() for p in model.parameters()):,}")
+
+# 显示模型结构
+print(f"\n🏗️ 模型结构:")
+print(f"  编码器参数: {sum(p.numel() for p in model.encoder.parameters()):,}")
+print(f"  解码器参数: {sum(p.numel() for p in model.decoder.parameters()):,}")
+
+# 测试模型
+test_src = sample_batch['src'][:1].to(device)               # 取一个样本
+test_tgt = sample_batch['tgt_input'][:1].to(device)
+
+print(f"\n🧪 模型测试:")
+print(f"  输入形状: {test_src.shape}")
+print(f"  目标形状: {test_tgt.shape}")
+
+with torch.no_grad():
+    outputs = model(test_src, test_tgt, teacher_forcing_ratio=1.0)
+    print(f"✅ 模型输出形状: {outputs.shape}")
