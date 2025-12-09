@@ -861,3 +861,284 @@ print(f"  目标形状: {test_tgt.shape}")
 with torch.no_grad():
     outputs = model(test_src, test_tgt, teacher_forcing_ratio=1.0)
     print(f"✅ 模型输出形状: {outputs.shape}")
+
+
+# 训练我们的翻译模型
+# 训练 vs 推理详细对比演示
+print("🎭 训练模式 vs 推理模式详细对比")
+print("=" * 70)
+
+# 使用一个简单的例子来演示
+demo_en = "hello"
+demo_zh = "你好"
+
+print(f"📝 演示句子: '{demo_en}' → '{demo_zh}'")
+print("-" * 50)
+
+# 准备输入数据
+src_tensor = torch.tensor([en_vocab.encode_sentence(demo_en)]).to(device)
+tgt_input = [zh_vocab.word2idx[zh_vocab.SOS_TOKEN]] + zh_vocab.encode_sentence(demo_zh, add_eos=False)
+tgt_input_tensor = torch.tensor([tgt_input]).to(device)
+tgt_output = zh_vocab.encode_sentence(demo_zh, add_eos=True)
+
+print(f"🎓 训练模式演示:")
+print(f"  输入编码: {src_tensor.tolist()[0]} -> {[en_vocab.idx2word[i] for i in src_tensor.tolist()[0]]}")
+print(f"  目标输入: {tgt_input_tensor.tolist()[0]} -> {[zh_vocab.idx2word[i] for i in tgt_input_tensor.tolist()[0]]}")
+print(f"  目标输出: {tgt_output} -> {[zh_vocab.idx2word[i] for i in tgt_output]}")
+
+# 训练模式的详细步骤
+model.train()
+print(f"\n  🔄 训练步骤详解:")
+
+# 编码阶段
+with torch.no_grad():
+    _, (encoder_hidden, encoder_cell) = model.encoder(src_tensor)
+    print(f"  1. 编码器处理: '{demo_en}' -> 隐状态形状 {encoder_hidden.shape}")
+
+    # 解码阶段（模拟）
+    decoder_hidden = encoder_hidden
+    decoder_cell = encoder_cell
+
+    print(f"  2. 解码器步骤:")
+    for t in range(len(tgt_input)):
+        current_input = tgt_input_tensor[:, t:t+1]          # 当前时间步输入
+
+        # 解码器前向传播
+        decoder_output, (decoder_hidden, decoder_cell) = model.decoder(current_input, (decoder_hidden, decoder_cell))
+        predicted_id = decoder_output.argmax(dim=-1).item()
+        predicted_word = zh_vocab.idx2word[predicted_id]
+
+        if t < len(tgt_input):
+            true_word = zh_vocab.idx2word[tgt_output[t]]
+            print(f"    步骤{t+1}: 输入'{zh_vocab.idx2word[current_input.item()]}' -> 预测'{predicted_word}' (真实: '{true_word}')")
+        else:
+            print(f"    步骤{t+1}: 输入'{zh_vocab.idx2word[current_input.item()]}' -> 预测'{predicted_word}'")
+
+print(f"\n🔮 推理模式演示:")
+model.eval()
+
+# 推理模式的详细步骤
+print(f"    输入编码: {src_tensor.tolist()[0]} -> {[en_vocab.idx2word[i] for i in src_tensor.tolist()[0]]}")
+print(f"    目标输出: 未知！需要逐步生成")
+
+print(f"\n   🔄 推理步骤详解:")
+with torch.no_grad():
+    # 编码阶段
+    _, (encoder_hidden, encoder_cell) = model.encoder(src_tensor)
+    print(f"    1. 编码器处理: '{demo_en}' -> 隐状态形状 {encoder_hidden.shape}")
+
+    # 解码阶段
+    decoder_hidden = encoder_hidden
+    decoder_cell = encoder_cell
+
+    current_input = torch.tensor([[zh_vocab.word2idx[zh_vocab.SOS_TOKEN]]]).to(device)
+    generated_sequence = []
+
+    print(f"    2. 解码器步骤:")
+    for t in range(5):              # 最多生成5个词
+        # 解码器前向传播
+        decoder_output, (decoder_hidden, decoder_cell) = model.decoder(current_input, (decoder_hidden, decoder_cell))
+        predicted_id = decoder_output.argmax(dim=-1).item()
+        predicted_word = zh_vocab.idx2word[predicted_id]
+
+        print(f"    步骤{t+1}: 输入'{zh_vocab.idx2word[current_input.item()]}' -> 预测'{predicted_word}'")
+
+        generated_sequence.append(predicted_id)
+
+        # 停止条件
+        if predicted_id == zh_vocab.word2idx[zh_vocab.EOS_TOKEN]:
+            print(f"        遇到结束符，停止生成")
+            break
+
+        # 下一步的输入是当前的预测（关键区别！）
+        current_input = torch.tensor([[predicted_id]]).to(device)
+
+    generated_text = zh_vocab.decode_sentence(generated_sequence)
+    print(f"    3. 最终生成: '{generated_text}'")
+
+print(f"\n💡 关键区别总结:")
+print(f"   🎓 训练模式:")
+print(f"      - 解码器输入: 使用真实的目标序列 (Teacher Forcing)")
+print(f"      - 优点: 训练稳定、快速")
+print(f"      - 缺点: 与推理不一致")
+print(f"   🔮 推理模式:")
+print(f"      - 解码器输入: 使用自己的预测结果")
+print(f"      - 优点: 真实的使用场景")
+print(f"      - 缺点: 错误会累积传播")
+
+print(f"\n⚠️  曝光偏差 (Exposure Bias):")
+print(f"   问题: 训练时模型从未见过自己的错误预测")
+print(f"   后果: 推理时一旦出错，可能一错到底")
+print(f"   解决方案: 调度采样、强化学习等高级技术")
+
+
+# 训练和评估函数
+def train_epoch(model, dataloader, optimizer, criterion, device):
+    """训练一个epoch"""
+    model.train()
+    total_loss = 0
+
+    for batch_idx, batch in enumerate(dataloader):
+        # 将数据移到设备上
+        src = batch['src'].to(device)
+        tgt_input = batch['tgt_input'].to(device)
+        tgt_output = batch['tgt_output'].to(device)
+
+        # 清零梯度
+        optimizer.zero_grad()
+
+        # 前向传播
+        output = model(src, tgt_input, teacher_forcing_ratio=0.5)
+
+        # 计算损失（忽略填充符号）
+        # 不再去掉第一个时间步，因为现在模型会学习预测第一个字符
+        output = output.reshape(-1, output.size(-1))                # 展平所有时间步
+        tgt_output = tgt_output.reshape(-1)                         # 展平所有时间步
+
+        loss = criterion(output, tgt_output)
+
+        # 反向传播
+        loss.backward()
+
+        # 梯度裁剪（防止梯度爆炸）
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+        # 更新参数
+        optimizer.step()
+
+        total_loss += loss.item()
+
+        if batch_idx % 5 == 0:              # 每5个batch打印一次
+            print(f'  Batch {batch_idx + 1}/{len(dataloader)}, Loss: {loss.item():.4f}')
+
+    return total_loss / len(dataloader)
+
+def evaluate_model(model, dataloader, criterion, device):
+    """评估模型"""
+    model.eval()
+    total_loss = 0
+
+    with torch.no_grad():
+        for batch in dataloader:
+            src = batch['src'].to(device)
+            tgt_input = batch['tgt_input'].to(device)
+            tgt_output = batch['tgt_output'].to(device)
+
+            # 前向传播（不使用教师强制）
+            output = model(src, tgt_input, teacher_forcing_ratio=0)
+
+            # 计算损失，不再去掉第一个时间步
+            output = output.reshape(-1, output.size(-1))
+            tgt_output = tgt_output.reshape(-1)
+
+            loss = criterion(output, tgt_output)
+            total_loss += loss.item()
+
+    return total_loss / len(dataloader)
+
+def translate_sentence(model, sentence, src_vocab, tgt_vocab, device, max_length=20):
+    """翻译单个句子"""
+    model.eval()
+
+    # 预处理句子
+    tokens = sentence.lower().split()
+    indices = [src_vocab.word2idx.get(token, src_vocab.word2idx[src_vocab.UNK_TOKEN]) for token in tokens]
+    indices.append(src_vocab.word2idx[src_vocab.EOS_TOKEN])
+
+    # 转换为tensor
+    src_tensor = torch.tensor([indices]).to(device)
+
+    # 翻译
+    with torch.no_grad():
+        generated_indices = model.translate(src_tensor, max_length)
+
+    # 解码为文本
+    translation = tgt_vocab.decode_sentence(generated_indices)
+
+    return translation
+
+# 设置训练参数
+criterion = nn.CrossEntropyLoss(ignore_index=zh_vocab.word2idx[zh_vocab.PAD_TOKEN])
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+print("🏋️ 训练设置完成！")
+print(f"📉 损失函数: CrossEntropyLoss (忽略填充符号)")
+print(f"🔧 优化器: Adam (学习率: 0.001)")
+print(f"🎯 设备: {device}")
+
+
+# 验证修复效果
+print("🔧 验证修复效果")
+print("=" * 50)
+
+# 重新创建模型以应用修复
+model = Seq2Seq(encoder, decoder, device).to(device)
+
+# 简单测试训练是否正常
+print("\n🧪 测试修复后的训练流程:")
+test_batch = next(iter(dataloader))
+src = test_batch['src'][:2].to(device)
+tgt_input = test_batch['tgt_input'][:2].to(device)
+tgt_output = test_batch['tgt_output'][:2].to(device)
+
+print(f"   源序列形状: {src.shape}")
+print(f"   目标输入形状: {tgt_input.shape}")
+print(f"   目标输出形状: {tgt_output.shape}")
+
+# 测试前向传播
+model.train()
+with torch.no_grad():
+    output = model(src, tgt_input, teacher_forcing_ratio=1.0)
+    print(f"    模型输出形状: {output.shape}")
+
+    # 测试损失计算
+    criterion = nn.CrossEntropyLoss(ignore_index=zh_vocab.word2idx[zh_vocab.PAD_TOKEN])
+    output_flat = output.reshape(-1, output.size(-1))
+    tgt_output_flat = tgt_output.reshape(-1)
+    loss = criterion(output_flat, tgt_output_flat)
+    print(f"    损失计算成功，损失值: {loss.item():.4f}")
+
+# 测试推理
+print(f"\n🔮 测试修复后的推理:")
+test_sentences = ["hi.", "hello!", "good morning"]
+for sentence in test_sentences:
+    translation = translate_sentence(model, sentence, en_vocab, zh_vocab, device)
+    print(f"    '{sentence}' -> '{translation}'")
+
+print(f"\n✅ 修复验证完成！")
+print(f"注意：由于模型尚未重新训练，预测结果可能仍然不准确。")
+print(f"但现在模型的架构已经修复，重新训练后应该能正确预测第一个字符。")
+
+# 开始训练
+print("🚀 开始训练Seq2Seq模型...")
+print("=" * 50)
+
+num_epochs = 50         # 由于数据集很小，我们多训练几轮
+train_losses = []
+best_loss = float('inf')
+
+for epoch in range(num_epochs):
+    print(f"\n📚 Epoch {epoch + 1}/{num_epochs}")
+
+    # 训练
+    train_loss = train_epoch(model, dataloader, optimizer, criterion, device)
+    train_losses.append(train_loss)
+
+    print(f"✅ 平均训练损失: {train_loss:.4f}")
+
+    # 每10个epoch测试翻译效果
+    if (epoch + 1) % 10 == 0:
+        print("\n🔍 翻译测试:")
+        test_sentences = ["hello", "thank you", "i love you", "good morning"]
+
+        for sentence in test_sentences:
+            translation = translate_sentence(model, sentence, en_vocab, zh_vocab, device)
+            print(f"    '{sentence}' -> '{translation}'")
+
+    # 保存最佳模型
+    if train_loss < best_loss:
+        best_loss = train_loss
+        torch.save(model.state_dict(), "best_seq2seq_model.pt")
+
+print(f"\n🎉 训练完成！最佳损失: {best_loss:.4f}")
+print("模型已保存为 'best_seq2seq_model.pth'")
